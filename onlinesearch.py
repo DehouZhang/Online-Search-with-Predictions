@@ -5,7 +5,7 @@ import pandas as pd
 
 
 def load_data_set(file_name):
-    file = pd.read_csv(file_name, header=None, sep="\t", usecols=[4], skiprows=350, nrows=50)
+    file = pd.read_csv(file_name, header=None, sep="\t", usecols=[4], skiprows=350, nrows=200)
     raw_data = []
     for i in file.values.tolist():
         raw_data.append(i[0])
@@ -13,7 +13,7 @@ def load_data_set(file_name):
 
 
 def get_maxmin(file_name):
-    file = pd.read_csv(file_name, header=None, sep="\t", usecols=[4], skiprows=350, nrows=100)
+    file = pd.read_csv(file_name, header=None, sep="\t", usecols=[4], skiprows=350, nrows=250)
     raw_data = []
     for i in file.values.tolist():
         raw_data.append(i[0])
@@ -37,9 +37,11 @@ def first_greater_element(searching_list, element):
     return result
 
 
-def online_search_untrusted(data, H, eps, best_price, b):
-    v = best_price * (1 + eps)
-    v_prime = v / b
+def online_search_untrusted(data, Hl, Hu, eta_u, M, m):
+    v = M / (1 + eta_u)
+    v_prime = sqrt(M * m)
+    if (1 + Hu) / (1 - Hl) <= sqrt(M / m):
+        v_prime = v * (1 - Hl)
     trading_price = first_greater_element(data, v_prime)
     return trading_price
 
@@ -51,12 +53,63 @@ def main():
     # plt.plot(data)
     # plt.show()
     M, m = get_maxmin("data\ETHUSD.csv")
-    print("Pure online trading price: ", search_based(data, M, m))
+    opt = search_based(data, M, m)
+    print("Pure online trading price: ", opt)
     print("M and m:", M, m)
     print("First price in trading period:", data[0])
     print("Last price in trading period:", data[-1])
-    H_list = [0.01, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.99]
+    #Hl_list = [0.01, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 0.99]
+    Hl_list = np.linspace(0, 1, 100)
+    average_payoff_list = list()
+    average_payoff_list_two = list()
 
+    for Hl in Hl_list:
+        eta_u_list = np.linspace(0, Hl, 500)
+        average_payoff = 0
+        average_payoff_two = 0
+        for eta_u in eta_u_list:
+            payoff = online_search_untrusted(data, Hl, Hl, eta_u, M, m)
+            payoff_two = online_search_untrusted(data, Hl, 0.5*Hl, eta_u, M, m)
+            average_payoff += payoff
+            average_payoff_two += payoff_two
+        average_payoff = average_payoff / 500
+        average_payoff_list.append(average_payoff)
+
+        average_payoff_two = average_payoff_two / 500
+        average_payoff_list_two.append(average_payoff_two)
+
+
+
+
+    # draw
+    # hu=hl
+    plt.plot(Hl_list, average_payoff_list, color='r', markerfacecolor='blue', marker='o', label='Untrusted ALG')
+    plt.axhline(opt, color='blue', linestyle='--', label='Pure Online')
+    plt.xlabel('Hu =Hl')
+    plt.ylabel('Average Payoff')
+    title = "Average Payoff for H"
+    plt.title(title)
+    for a, b in zip(Hl_list, average_payoff_list):
+        b = float(b)
+        plt.text(a, b * 1.02, "%.2f" % b, ha='right', va='center', fontsize=6)
+    plt.legend()
+    plt.show()
+
+    #hu=2hl
+    plt.plot(Hl_list, average_payoff_list_two, color='r', markerfacecolor='blue', marker='o', label='Untrusted ALG')
+    plt.axhline(opt, color='blue', linestyle='--', label='Pure Online')
+    plt.xlabel('Hu =2Hl')
+    plt.ylabel('Average Payoff')
+    title = "Average Payoff for H"
+    plt.title(title)
+    for a, b in zip(Hl_list, average_payoff_list_two):
+        b = float(b)
+        plt.text(a, b * 1.02, "%.2f" % b, ha='right', va='center', fontsize=6)
+    plt.legend()
+    plt.show()
+
+
+'''
     for H in H_list:
         trading_prices = list()
         eps_list = list()
@@ -81,7 +134,6 @@ def main():
             plt.savefig("OnlineSearch_fig/" + title + ".png")
             plt.clf()
 
-    '''
         for x, y in zip(eta_list[i], trading_prices[i]):
             label = y
 
@@ -91,7 +143,6 @@ def main():
                          xytext=(0, 10),  # distance from text to points (x,y)
                          ha='center')  # horizontal alignment can be left, right or center
         '''
-
 
 if __name__ == '__main__':
     main()
