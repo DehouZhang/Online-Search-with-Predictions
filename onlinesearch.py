@@ -20,7 +20,7 @@ def get_maxmin(file_name):
     return max(raw_data), min(raw_data)
 
 
-def search_based(data, M, m):
+def pure_online(data, M, m):
     reservation_price = sqrt(M * m)
     trade_price = first_greater_element(data, reservation_price)
     return trade_price
@@ -37,76 +37,240 @@ def first_greater_element(searching_list, element):
     return result
 
 
-def online_search_untrusted(data, Hl, Hu, eta_u, M, m):
-    v = M / (1 + eta_u)
+def h_aware_negative(data, v_star, Hn, Hp, eta, M, m):
+    v = v_star / (1 + eta)
     v_prime = sqrt(M * m)
-    if (1 + Hu) / (1 - Hl) <= sqrt(M / m):
-        v_prime = v * (1 - Hl)
+    if (1 + Hn) / (1 - Hp) <= sqrt(M / m):
+        v_prime = v * (1 - Hp)
+    trading_price = first_greater_element(data, v_prime)
+    return trading_price
+
+
+def h_aware_positive(data, v_star, Hn, Hp, eta, M, m):
+    v = v_star / (1 - eta)
+    v_prime = sqrt(M * m)
+    if (1 + Hn) / (1 - Hp) <= sqrt(M / m):
+        v_prime = v * (1 - Hp)
+    trading_price = first_greater_element(data, v_prime)
+    return trading_price
+
+
+def h_oblivious_negative(data, v_star, eta, r):
+    v = v_star / (1 + eta)
+    v_prime = r * v
+    trading_price = first_greater_element(data, v_prime)
+    return trading_price
+
+
+def h_oblivious_positive(data, v_star, eta, r):
+    v = v_star / (1 - eta)
+    v_prime = r * v
     trading_price = first_greater_element(data, v_prime)
     return trading_price
 
 
 def main():
     data = load_data_set("data\ETHUSD.csv")
-    print("Best price is:", max(data))
-    best_price = max(data)
-    # plt.plot(data)
-    # plt.show()
     M, m = get_maxmin("data\ETHUSD.csv")
-    opt = search_based(data, M, m)
+    v_star = max(data)
+    opt = pure_online(data, M, m)
+    pure_online_cr = v_star/opt
+
+    print("Best price is:", v_star)
     print("Pure online trading price: ", opt)
     print("M and m:", M, m)
     print("First price in trading period:", data[0])
     print("Last price in trading period:", data[-1])
-    #Hl_list = [0.01, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 0.99]
-    Hl_list = np.linspace(0, 1, 100)
-    average_payoff_list = list()
-    average_payoff_list_two = list()
 
-    for Hl in Hl_list:
-        eta_u_list = np.linspace(0, Hl, 500)
-        average_payoff = 0
-        average_payoff_two = 0
-        for eta_u in eta_u_list:
-            payoff = online_search_untrusted(data, Hl, Hl, eta_u, M, m)
-            payoff_two = online_search_untrusted(data, Hl, 0.5*Hl, eta_u, M, m)
-            average_payoff += payoff
-            average_payoff_two += payoff_two
-        average_payoff = average_payoff / 500
-        average_payoff_list.append(average_payoff)
+    r_list = [0.5, 0.75, 1, 1.5]
+    # H-oblivious negative
+    Hn_bound = (M - m) / m
+    Hn_list = np.linspace(0, Hn_bound, 100)
+    payoff_list = list()
+    payoff_list2 = list()
+    payoff_list3 = list()
+    payoff_list4 = list()
+    for Hn in Hn_list:
+        sum_payoff = 0
+        sum_payoff2 = 0
+        sum_payoff3 = 0
+        sum_payoff4 = 0
+        eta_list = np.linspace(0, Hn, 500)
+        for eta in eta_list:
+            payoff = h_oblivious_negative(data, v_star, eta, 0.5)
+            payoff2 = h_oblivious_negative(data, v_star, eta, 0.75)
+            payoff3 = h_oblivious_negative(data, v_star, eta, 1)
+            payoff4 = h_oblivious_negative(data, v_star, eta, 1.5)
+            sum_payoff += payoff
+            sum_payoff2 += payoff2
+            sum_payoff3 += payoff3
+            sum_payoff4 += payoff4
+        average_payoff = sum_payoff / 500
+        average_payoff2 = sum_payoff2 / 500
+        average_payoff3 = sum_payoff3 / 500
+        average_payoff4 = sum_payoff4 / 500
+        payoff_list.append(average_payoff)
+        payoff_list2.append(average_payoff2)
+        payoff_list3.append(average_payoff3)
+        payoff_list4.append(average_payoff4)
 
-        average_payoff_two = average_payoff_two / 500
-        average_payoff_list_two.append(average_payoff_two)
+    # H-oblivious positive
+    Hp_bound = (M - m) / M
+    Hp_list = np.linspace(0, Hp_bound, 100)
+    payoff_list5 = list()
+    payoff_list6 = list()
+    payoff_list7 = list()
+    payoff_list8 = list()
+    for Hp in Hp_list:
+        sum_payoff5 = 0
+        sum_payoff6 = 0
+        sum_payoff7 = 0
+        sum_payoff8 = 0
+        eta_list = np.linspace(0, Hp, 500)
+        for eta in eta_list:
+            payoff5 = h_oblivious_positive(data, v_star, eta, 0.5)
+            payoff6 = h_oblivious_positive(data, v_star, eta, 0.75)
+            payoff7 = h_oblivious_positive(data, v_star, eta, 1)
+            payoff8 = h_oblivious_positive(data, v_star, eta, 1.5)
+            sum_payoff5 += payoff5
+            sum_payoff6 += payoff6
+            sum_payoff7 += payoff7
+            sum_payoff8 += payoff8
+        average_payoff5 = sum_payoff5 / 500
+        average_payoff6 = sum_payoff6 / 500
+        average_payoff7 = sum_payoff7 / 500
+        average_payoff8 = sum_payoff8 / 500
+        payoff_list5.append(average_payoff5)
+        payoff_list6.append(average_payoff6)
+        payoff_list7.append(average_payoff7)
+        payoff_list8.append(average_payoff8)
 
+    # H-Oblivious
+    Hn_list1 = Hn_list.tolist()
+    Hn_list1 = [-x for x in Hn_list1]
+    Hp_list1 = Hp_list.tolist()
+    H_list = Hn_list1[::-1] + Hp_list1
 
+    payoff_list = payoff_list[::-1] + payoff_list5
+    payoff_list2 = payoff_list2[::-1] + payoff_list6
+    payoff_list3 = payoff_list3[::-1] + payoff_list7
+    payoff_list4 = payoff_list4[::-1] + payoff_list8
 
+    # draw H-oblivious
+    fig, ax = plt.subplots()
+    # ax.plot(H_list, payoff_list, label='r=0.5')
+    # ax.plot(H_list, payoff_list2, label='r=0.75')
+    # ax.plot(H_list, payoff_list3, label='r=1')
+    # ax.plot(H_list, payoff_list4, label='r=1.5')
 
-    # draw
-    # hu=hl
-    plt.plot(Hl_list, average_payoff_list, color='r', markerfacecolor='blue', marker='o', label='Untrusted ALG')
-    plt.axhline(opt, color='blue', linestyle='--', label='Pure Online')
-    plt.xlabel('Hu =Hl')
-    plt.ylabel('Average Payoff')
-    title = "Average Payoff for H"
-    plt.title(title)
-    for a, b in zip(Hl_list, average_payoff_list):
-        b = float(b)
-        plt.text(a, b * 1.02, "%.2f" % b, ha='right', va='center', fontsize=6)
+    cr = [v_star / x for x in payoff_list]
+    cr2 = [v_star / x for x in payoff_list2]
+    cr3 = [v_star / x for x in payoff_list3]
+    cr4 = [v_star / x for x in payoff_list4]
+    ax.plot(H_list, cr, label='r=0.5')
+    ax.plot(H_list, cr2, label='r=0.75')
+    ax.plot(H_list, cr3, label='r=1')
+    ax.plot(H_list, cr4, label='r=1.5')
+    ax.axhline(pure_online_cr, color='black', ls='dotted', label='Pure Online')
+
+    ax.set_title("H-Oblivious")
+    ax.set_xlabel("Hn")
+    ax.set_ylabel("Expected Competitive Ratio")
     plt.legend()
     plt.show()
 
-    #hu=2hl
-    plt.plot(Hl_list, average_payoff_list_two, color='r', markerfacecolor='blue', marker='o', label='Untrusted ALG')
-    plt.axhline(opt, color='blue', linestyle='--', label='Pure Online')
-    plt.xlabel('Hu =2Hl')
-    plt.ylabel('Average Payoff')
-    title = "Average Payoff for H"
-    plt.title(title)
-    for a, b in zip(Hl_list, average_payoff_list_two):
-        b = float(b)
-        plt.text(a, b * 1.02, "%.2f" % b, ha='right', va='center', fontsize=6)
+    # H-aware-negative
+    Hn_list = np.linspace(0, Hn_bound, 100)
+    payoff_list = list()
+    payoff_list2 = list()
+    payoff_list3 = list()
+    payoff_list4 = list()
+    for Hn in Hn_list:
+        sum_payoff = 0
+        sum_payoff2 = 0
+        sum_payoff3 = 0
+        sum_payoff4 = 0
+        eta_list = np.linspace(0, Hn, 500)
+        for eta in eta_list:
+            payoff = h_aware_negative(data, v_star, Hn, 0.1, eta, M, m)
+            payoff2 = h_aware_negative(data, v_star, Hn, 0.2, eta, M, m)
+            payoff3 = h_aware_negative(data, v_star, Hn, 0.3, eta, M, m)
+            payoff4= h_aware_negative(data, v_star, Hn, 0.4, eta, M, m)
+            sum_payoff += payoff
+            sum_payoff2 += payoff2
+            sum_payoff3 += payoff3
+            sum_payoff4 += payoff4
+        average_payoff = sum_payoff / 500
+        average_payoff2 = sum_payoff2 / 500
+        average_payoff3 = sum_payoff3 / 500
+        average_payoff4 = sum_payoff4 / 500
+        payoff_list.append(average_payoff)
+        payoff_list2.append(average_payoff2)
+        payoff_list3.append(average_payoff3)
+        payoff_list4.append(average_payoff4)
+        cr = [v_star / x for x in payoff_list]
+        cr2 = [v_star / x for x in payoff_list2]
+        cr3 = [v_star / x for x in payoff_list3]
+        cr4 = [v_star / x for x in payoff_list4]
+
+    fig, ax = plt.subplots()
+    ax.plot(Hn_list, cr, label='Hp=0.1')
+    ax.plot(Hn_list, cr2, label='Hp=0.2')
+    ax.plot(Hn_list, cr3, label='Hp=0.3')
+    ax.plot(Hn_list, cr4, label='Hp=0.4')
+    ax.axhline(pure_online_cr, color='black', ls='dotted', label='Pure Online')
+    ax.set_title("H-aware with fixed Hn")
+    ax.set_xlabel("Hp")
+    ax.set_ylabel("Expected Competitive Ratio")
     plt.legend()
     plt.show()
+
+    # H-aware-positive
+    Hp_list = np.linspace(0, Hp_bound, 100)
+    payoff_list = list()
+    payoff_list2 = list()
+    payoff_list3 = list()
+    payoff_list4 = list()
+    for Hp in Hp_list:
+        sum_payoff = 0
+        sum_payoff2 = 0
+        sum_payoff3 = 0
+        sum_payoff4 = 0
+        eta_list = np.linspace(0, Hp, 500)
+        for eta in eta_list:
+            payoff = h_aware_positive(data, v_star, 0.1, Hp, eta, M, m)
+            payoff2 = h_aware_positive(data, v_star, 0.2, Hp, eta, M, m)
+            payoff3 = h_aware_positive(data, v_star, 0.3, Hp, eta, M, m)
+            payoff4 = h_aware_positive(data, v_star, 0.4, Hp, eta, M, m)
+            sum_payoff += payoff
+            sum_payoff2 += payoff2
+            sum_payoff3 += payoff3
+            sum_payoff4 += payoff4
+        average_payoff = sum_payoff / 500
+        average_payoff2 = sum_payoff2 / 500
+        average_payoff3 = sum_payoff3 / 500
+        average_payoff4 = sum_payoff4 / 500
+        payoff_list.append(average_payoff)
+        payoff_list2.append(average_payoff2)
+        payoff_list3.append(average_payoff3)
+        payoff_list4.append(average_payoff4)
+        cr = [v_star / x for x in payoff_list]
+        cr2 = [v_star / x for x in payoff_list2]
+        cr3 = [v_star / x for x in payoff_list3]
+        cr4 = [v_star / x for x in payoff_list4]
+
+    fig, ax = plt.subplots()
+    ax.plot(Hp_list, cr, label='Hn=0.1')
+    ax.plot(Hp_list, cr2, label='Hn=0.2')
+    ax.plot(Hp_list, cr3, label='Hn=0.3')
+    ax.plot(Hp_list, cr4, label='Hn=0.4')
+    ax.axhline(pure_online_cr, color='black', ls='dotted', label='Pure Online')
+    ax.set_title("H-aware with fixed Hp")
+    ax.set_xlabel("Hn")
+    ax.set_ylabel("Expected Competitive Ratio")
+    plt.legend()
+    plt.show()
+
 
 
 '''
