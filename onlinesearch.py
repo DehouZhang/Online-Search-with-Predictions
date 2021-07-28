@@ -82,6 +82,142 @@ def main():
     print("First price in trading period:", data[0])
     print("Last price in trading period:", data[-1])
 
+# changing eta for both H-oblivious and H-aware
+    r_list = [0.5, 0.75, 1, 1.5]
+    # H-oblivious negative
+    Hn_bound = (M - m) / m
+    eta_list_n = np.linspace(0, Hn_bound, 100)
+    payoff_list = list()
+    payoff_list2 = list()
+    payoff_list3 = list()
+    payoff_list4 = list()
+    for eta in eta_list_n:
+        payoff = h_oblivious_negative(data, v_star, eta, r_list[0])
+        payoff2 = h_oblivious_negative(data, v_star, eta, r_list[1])
+        payoff3 = h_oblivious_negative(data, v_star, eta, r_list[2])
+        payoff4 = h_oblivious_negative(data, v_star, eta, r_list[3])
+        payoff_list.append(payoff)
+        payoff_list2.append(payoff2)
+        payoff_list3.append(payoff3)
+        payoff_list4.append(payoff4)
+
+    # H-oblivious positive
+    Hp_bound = (M - m) / M
+    eta_list_p = np.linspace(0, Hp_bound, 100)
+    payoff_list5 = list()
+    payoff_list6 = list()
+    payoff_list7 = list()
+    payoff_list8 = list()
+    for eta in eta_list_p:
+        payoff5 = h_oblivious_positive(data, v_star, eta, r_list[0])
+        payoff6 = h_oblivious_positive(data, v_star, eta, r_list[1])
+        payoff7 = h_oblivious_positive(data, v_star, eta, r_list[2])
+        payoff8 = h_oblivious_positive(data, v_star, eta, r_list[3])
+        payoff_list5.append(payoff5)
+        payoff_list6.append(payoff6)
+        payoff_list7.append(payoff7)
+        payoff_list8.append(payoff8)
+
+    # H aware
+    # H-aware-negative
+    Hn_list = [0.1, 0.2]
+    Hp_list = [0.1, 0.2]
+
+    payoff_list9 = list()
+    payoff_list10 = list()
+    payoff_list11 = list()
+    payoff_list12 = list()
+    eta_list1 = np.linspace(0, Hn_list[0], 100)
+    eta_list2 = np.linspace(0, Hn_list[1], 100)
+    for eta in eta_list1:
+        payoff9 = h_aware_negative(data, v_star, Hn_list[0], Hp_list[0], eta, M, m)
+        payoff10 = h_aware_negative(data, v_star, Hn_list[0], Hp_list[1], eta, M, m)
+        payoff_list9.append(payoff9)
+        payoff_list10.append(payoff10)
+    for eta in eta_list2:
+        payoff11 = h_aware_negative(data, v_star, Hn_list[1], Hp_list[0], eta, M, m)
+        payoff12 = h_aware_negative(data, v_star, Hn_list[1], Hp_list[1], eta, M, m)
+        payoff_list11.append(payoff11)
+        payoff_list12.append(payoff12)
+
+    # H aware
+    # H-aware-positive
+    Hn_list = [0.1, 0.2]
+    Hp_list = [0.1, 0.2]
+
+    payoff_list13 = list()
+    payoff_list14 = list()
+    payoff_list15 = list()
+    payoff_list16 = list()
+    eta_list3 = np.linspace(0, Hp_list[0], 100)
+    eta_list4 = np.linspace(0, Hp_list[1], 100)
+    for eta in eta_list3:
+        payoff13 = h_aware_positive(data, v_star, Hn_list[0], Hp_list[0], eta, M, m)
+        payoff14 = h_aware_positive(data, v_star, Hn_list[0], Hp_list[1], eta, M, m)
+        payoff_list13.append(payoff13)
+        payoff_list14.append(payoff14)
+    for eta in eta_list4:
+        payoff15 = h_aware_positive(data, v_star, Hn_list[1], Hp_list[0], eta, M, m)
+        payoff16 = h_aware_positive(data, v_star, Hn_list[1], Hp_list[1], eta, M, m)
+        payoff_list15.append(payoff15)
+        payoff_list16.append(payoff16)
+
+    cr = [v_star / x for x in payoff_list]
+    cr2 = [v_star / x for x in payoff_list2]
+    cr3 = [v_star / x for x in payoff_list3]
+    cr4 = [v_star / x for x in payoff_list4]
+    cr5 = [v_star / x for x in payoff_list5]
+    cr6 = [v_star / x for x in payoff_list6]
+    cr7 = [v_star / x for x in payoff_list7]
+    cr8 = [v_star / x for x in payoff_list8]
+    cr9 = [v_star / x for x in payoff_list9]
+    cr10 = [v_star / x for x in payoff_list10]
+    cr11 = [v_star / x for x in payoff_list11]
+    cr12 = [v_star / x for x in payoff_list12]
+    cr13 = [v_star / x for x in payoff_list13]
+    cr14 = [v_star / x for x in payoff_list14]
+    cr15 = [v_star / x for x in payoff_list15]
+    cr16 = [v_star / x for x in payoff_list16]
+#draw
+    #negative
+    fig, ax = plt.subplots()
+    ax.plot(eta_list_n, cr, label='r=0.5')
+    ax.plot(eta_list_n, cr2, label='r=0.75')
+    ax.plot(eta_list_n, cr3, label='r=1')
+    ax.plot(eta_list_n, cr4, label='r=1.5')
+    ax.plot(eta_list1, cr9, label='Hn=0.1, Hp=0.1')
+    ax.plot(eta_list1, cr10, label='Hn=0.1, Hp=0.2')
+    ax.plot(eta_list2, cr11, label='Hn=0.2, Hp=0.1')
+    ax.plot(eta_list2, cr12, label='Hn=0.2, Hp=0.1')
+    ax.axhline(pure_online_cr, color='black', ls='dotted', label='Pure Online')
+    ax.set_title("Fixed $H_n$")
+    ax.set_xlabel("$\eta_n$")
+    ax.set_ylabel("Competitive Ratio")
+    plt.legend(prop={'size': 7})
+    plt.show()
+
+    #positive
+    fig, ax = plt.subplots()
+    ax.plot(eta_list_p, cr5, label='r=0.5')
+    ax.plot(eta_list_p, cr6, label='r=0.75')
+    ax.plot(eta_list_p, cr7, label='r=1')
+    ax.plot(eta_list_p, cr8, label='r=1.5')
+    ax.plot(eta_list3, cr13, label='Hn=0.1, Hp=0.1')
+    ax.plot(eta_list3, cr14, label='Hn=0.1, Hp=0.2')
+    ax.plot(eta_list4, cr15, label='Hn=0.2, Hp=0.1')
+    ax.plot(eta_list4, cr16, label='Hn=0.2, Hp=0.2')
+    ax.axhline(pure_online_cr, color='black', ls='dotted', label='Pure Online')
+    ax.set_title("Fixed $H_p$")
+    ax.set_xlabel("$\eta_p$")
+    ax.set_ylabel("Competitive Ratio")
+    plt.legend(prop={'size':7})
+    plt.show()
+
+
+
+
+''' 
+#average payoff for both H-oblivious and H-aware
     r_list = [0.5, 0.75, 1, 1.5]
     # H-oblivious negative
     Hn_bound = (M - m) / m
@@ -174,10 +310,12 @@ def main():
     ax.axhline(pure_online_cr, color='black', ls='dotted', label='Pure Online')
 
     ax.set_title("H-Oblivious")
-    ax.set_xlabel("Hn")
+    ax.set_xlabel("H")
     ax.set_ylabel("Expected Competitive Ratio")
     plt.legend()
     plt.show()
+    fig.savefig("average_payoff_fig/"+"H_Oblivious.png")
+
 
     # H-aware-negative
     Hn_list = np.linspace(0, Hn_bound, 100)
@@ -220,10 +358,11 @@ def main():
     ax.plot(Hn_list, cr4, label='Hp=0.4')
     ax.axhline(pure_online_cr, color='black', ls='dotted', label='Pure Online')
     ax.set_title("H-aware with fixed Hn")
-    ax.set_xlabel("Hp")
+    ax.set_xlabel("Hn")
     ax.set_ylabel("Expected Competitive Ratio")
     plt.legend()
     plt.show()
+    fig.savefig("average_payoff_fig/" + "H_aware_fix_hn.png")
 
     # H-aware-positive
     Hp_list = np.linspace(0, Hp_bound, 100)
@@ -266,12 +405,12 @@ def main():
     ax.plot(Hp_list, cr4, label='Hn=0.4')
     ax.axhline(pure_online_cr, color='black', ls='dotted', label='Pure Online')
     ax.set_title("H-aware with fixed Hp")
-    ax.set_xlabel("Hn")
+    ax.set_xlabel("Hp")
     ax.set_ylabel("Expected Competitive Ratio")
     plt.legend()
     plt.show()
-
-
+    fig.savefig("average_payoff_fig/" + "H_aware_fix_hp.png")
+'''
 
 '''
     for H in H_list:
