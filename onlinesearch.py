@@ -13,7 +13,7 @@ def load_data_set(file_name):
 
 
 def get_maxmin(file_name):
-    file = pd.read_csv(file_name, header=None, sep="\t", usecols=[4], skiprows=350, nrows=250)
+    file = pd.read_csv(file_name, header=None, sep="\t", usecols=[4], skiprows=350, nrows=400)
     raw_data = []
     for i in file.values.tolist():
         raw_data.append(i[0])
@@ -49,7 +49,7 @@ def h_aware_negative(data, v_star, Hn, Hp, eta, M, m):
 def h_aware_positive(data, v_star, Hn, Hp, eta, M, m):
     v = v_star / (1 - eta)
     v_prime = sqrt(M * m)
-    if (1 + Hn) / (1 - Hp) <= sqrt(M / m):
+    if (1+Hn) / (1 - Hp) <= sqrt(M / m):
         v_prime = v * (1 - Hp)
     trading_price = first_greater_element(data, v_prime)
     return trading_price
@@ -120,8 +120,8 @@ def main():
 
     # H aware
     # H-aware-negative
-    Hn_list = [0.1, 0.2]
-    Hp_list = [0.1, 0.2]
+    Hn_list = [0.1, 0.3]
+    Hp_list = [0.1, 0.3]
 
     payoff_list9 = list()
     payoff_list10 = list()
@@ -142,9 +142,6 @@ def main():
 
     # H aware
     # H-aware-positive
-    Hn_list = [0.1, 0.2]
-    Hp_list = [0.1, 0.2]
-
     payoff_list13 = list()
     payoff_list14 = list()
     payoff_list15 = list()
@@ -153,11 +150,11 @@ def main():
     eta_list4 = np.linspace(0, Hp_list[1], 100)
     for eta in eta_list3:
         payoff13 = h_aware_positive(data, v_star, Hn_list[0], Hp_list[0], eta, M, m)
-        payoff14 = h_aware_positive(data, v_star, Hn_list[0], Hp_list[1], eta, M, m)
+        payoff14 = h_aware_positive(data, v_star, Hn_list[1], Hp_list[0], eta, M, m)
         payoff_list13.append(payoff13)
         payoff_list14.append(payoff14)
     for eta in eta_list4:
-        payoff15 = h_aware_positive(data, v_star, Hn_list[1], Hp_list[0], eta, M, m)
+        payoff15 = h_aware_positive(data, v_star, Hn_list[0], Hp_list[1], eta, M, m)
         payoff16 = h_aware_positive(data, v_star, Hn_list[1], Hp_list[1], eta, M, m)
         payoff_list15.append(payoff15)
         payoff_list16.append(payoff16)
@@ -178,6 +175,61 @@ def main():
     cr14 = [v_star / x for x in payoff_list14]
     cr15 = [v_star / x for x in payoff_list15]
     cr16 = [v_star / x for x in payoff_list16]
+
+    eta_list_n = eta_list_n.tolist()
+    eta_list_p = eta_list_p.tolist()
+    eta_list_n = [-x for x in eta_list_n]
+    eta_list = eta_list_n[::-1] + eta_list_p
+
+    eta_list1 = eta_list1.tolist()
+    eta_list2 = eta_list2.tolist()
+    eta_list3 = eta_list3.tolist()
+    eta_list4 = eta_list4.tolist()
+    eta_list1 = [-x for x in eta_list1]
+    eta_list2 = [-x for x in eta_list2]
+
+    eta_list_1 = eta_list1[::-1] + eta_list3
+    eta_list_2 = eta_list1[::-1] + eta_list4
+    eta_list_3 = eta_list2[::-1] + eta_list3
+    eta_list_4 = eta_list2[::-1] + eta_list4
+
+    cr_1 = cr9[::-1] + cr13
+    cr_2 = cr10[::-1] + cr15
+    cr_3 = cr11[::-1] + cr14
+    cr_4 = cr12[::-1] + cr16
+
+    cr = cr[::-1] + cr5
+    cr2 = cr2[::-1] + cr6
+    cr3 = cr3[::-1] + cr7
+    cr4 = cr4[::-1] + cr8
+    fig, ax = plt.subplots()
+    ax.plot(eta_list, cr, label='r=0.5')
+    ax.plot(eta_list, cr2, label='r=0.75')
+    ax.plot(eta_list, cr3, label='r=1')
+    ax.plot(eta_list, cr4, label='r=1.5')
+    ax.axhline(pure_online_cr, color='black', ls='dotted', label='Pure Online')
+    plt.xticks([-2.5, -2.0, -1.5, -1.0, -0.5, 0.0, 0.5], ['2.5', '2.0', '1.5', '1.0', '0.5', '0.0', '0.5'])
+    ax.set_xlabel("$\eta$")
+    ax.set_ylabel("OPT/ALG")
+    ax.legend(prop={'size': 7})
+    fig.savefig("eta_payoff_fig/" + "h_oblivious.png")
+
+    fig, ax = plt.subplots()
+    ax.plot(eta_list_1, cr_1, label='$H_n=0.1$, $H_p=0.1$',color='purple')
+    ax.plot(eta_list_2, cr_2, label='$H_n=0.1$, $H_p=0.3$')
+    ax.plot(eta_list_3, cr_3, label='$H_n=0.3$, $H_p=0.1$',alpha = 0.5)
+    ax.plot(eta_list_4, cr_4, label='$H_n=0.3$, $H_p=0.3$')
+    ax.axhline(pure_online_cr, color='black', ls='dotted', label='Pure Online')
+    plt.xticks([-0.3, -0.2, -0.1, 0.0, 0.1, 0.2, 0.3], ['0.3', '0.2', '0.1', '0.0', '0.1', '0.2', '0.3'])
+    ax.set_xlabel("$\eta$")
+    ax.set_ylabel("OPT/ALG")
+
+    ax.legend(prop={'size': 7})
+
+    fig.savefig("eta_payoff_fig/" + "h_aware.png")
+    plt.show()
+
+'''    
 #draw
     #negative
     fig, ax = plt.subplots()
@@ -194,6 +246,7 @@ def main():
     ax.set_xlabel("$\eta_n$")
     ax.set_ylabel("Competitive Ratio")
     plt.legend(prop={'size': 7})
+    fig.savefig("eta_payoff_fig/" + "H_negative.png")
     plt.show()
 
     #positive
@@ -211,7 +264,11 @@ def main():
     ax.set_xlabel("$\eta_p$")
     ax.set_ylabel("Competitive Ratio")
     plt.legend(prop={'size':7})
+    fig.savefig("eta_payoff_fig/" + "H_positive.png")
     plt.show()
+'''
+
+
 
 
 
