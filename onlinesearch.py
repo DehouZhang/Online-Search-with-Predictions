@@ -5,7 +5,7 @@ import pandas as pd
 
 
 def load_data_set(file_name):
-    file = pd.read_csv(file_name, header=None, sep="\t", usecols=[4], skiprows=350, nrows=200)
+    file = pd.read_csv(file_name, header=None, sep="\t", usecols=[4], skiprows=580, nrows=200)
     raw_data = []
     for i in file.values.tolist():
         raw_data.append(i[0])
@@ -13,7 +13,7 @@ def load_data_set(file_name):
 
 
 def get_maxmin(file_name):
-    file = pd.read_csv(file_name, header=None, sep="\t", usecols=[4], skiprows=350, nrows=400)
+    file = pd.read_csv(file_name, header=None, sep="\t", usecols=[4], skiprows=580, nrows=400)
     raw_data = []
     for i in file.values.tolist():
         raw_data.append(i[0])
@@ -120,8 +120,8 @@ def main():
 
     # H aware
     # H-aware-negative
-    Hn_list = [0.1, 0.3]
-    Hp_list = [0.1, 0.3]
+    Hn_list = [0.1, 0.4]
+    Hp_list = [0.1, 0.4]
 
     payoff_list9 = list()
     payoff_list10 = list()
