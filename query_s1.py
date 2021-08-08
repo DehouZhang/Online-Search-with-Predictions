@@ -185,6 +185,8 @@ def main():
     fig, ax = plt.subplots()
     ax.plot(H_list, price_list, label='Query Model Solution 1')
     ax.axhline(pure_online, color='black', ls='dotted', label='Pure Online')
+    ax.axhline(v_star, color='red', ls='dotted', label='Best Price')
+    ax.set_xlim([0,1])
     #plt.xticks([-2.5, -2.0, -1.5, -1.0, -0.5, 0.0, 0.5], ['2.5', '2.0', '1.5', '1.0', '0.5', '0.0', '0.5'])
     ax.set_xlabel("H")
     ax.set_ylabel("Average Trading Price")
