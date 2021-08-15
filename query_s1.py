@@ -5,16 +5,16 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 
-def load_data_set(file_name):
-    file = pd.read_csv(file_name, header=None, sep="\t", usecols=[4], skiprows=580, nrows=200)
+def load_data_set(file_name, starting_day, period):
+    file = pd.read_csv(file_name, header=None, sep="\t", usecols=[4], skiprows=starting_day, nrows=period)
     raw_data = []
     for i in file.values.tolist():
         raw_data.append(i[0])
     return raw_data
 
 
-def get_maxmin(file_name):
-    file = pd.read_csv(file_name, header=None, sep="\t", usecols=[4], skiprows=580, nrows=400)
+def get_maxmin(file_name, starting_day, period):
+    file = pd.read_csv(file_name, header=None, sep="\t", usecols=[4], skiprows=starting_day, nrows=period)
     raw_data = []
     for i in file.values.tolist():
         raw_data.append(i[0])
@@ -52,10 +52,11 @@ def generate_query(k, M, m, v_star):
     return query
 
 
-def generate_wrong_query(query, H):
+def generate_wrong_query(query, H, eta):
     k = len(query)
     p = ceil(k * H)
-    wrong_position_list = random.sample(range(0, k), p)  # random from 0 to 99
+    wrong_number = ceil(k*eta)
+    wrong_position_list = random.sample(range(0, k), wrong_number)  # random from 0 to 99
     for i in wrong_position_list:
         if query[i] == 0:
             query[i] = 1
@@ -92,8 +93,8 @@ def check_yes_answers(query, position, H):
 
 def correct_wrong_answer(query, H):
     k = len(query)
-    p = ceil(k * H)
-    for i in range(k):
+    position_list = random.sample(range(0, k), k)
+    for i in position_list:
         if i == 0:
             if query[i] == 1:
                 if check_no_answers(query, i, H):
@@ -132,67 +133,95 @@ def count_alpha(query, i, j):
     return alpha
 
 
+def check_query_all_no(query):
+    count = 0
+    for i in range(len(query)):
+        if query[i] == 1:
+            count = count+1
+    if count==0:
+        query[-1] = 1
+        return True
+    else:
+        return False
+
+
 def main():
-    data = load_data_set("data\ETHUSD.csv")
-    M, m = get_maxmin("data\ETHUSD.csv")
+    starting_day = 580
+    whole_period = 300
+    trading_period = 200
+    data = load_data_set("data\ETHUSD.csv",starting_day, trading_period)
+    M, m = get_maxmin("data\ETHUSD.csv",starting_day, whole_period)
     pure_online = online(data,M,m)
     v_star = max(data)
     k = 100
     r = (M / m) ** (1 / k)
-    H_list = np.linspace(0,1,20)
-    #H_list = [0.3,0.35,0.4]
-    average_coefficient = 1000
-    price_list = list()
-    for H in H_list:
-        average_trading_price = 0
-        for i in range(average_coefficient):
-            query = generate_query(k, M, m, v_star)
-            wrong_query = generate_wrong_query(query, H)
-            corrected_query = correct_wrong_answer(wrong_query, H)
-            i = find_first_yes(corrected_query)
-            j = find_last_no(corrected_query)
-            if i > j:
-                i_prime = j
-                j_prime = i
-            else:
-                alpha = count_alpha(corrected_query, i, j)
-                p = ceil(k * H)
-                i_prime = i - p + alpha
-                j_prime = p + i + alpha - 1
-
-                if i_prime < 0 or j_prime > k:
-                    i_prime = 0
-                    j_prime = k
-
-                '''
-                if i_prime < 0:
-                    i_prime = 0
-                if j_prime > k:
-                    j_prime = k
-                '''
-
-            m_prime = m * (r ** i_prime)
-            M_prime = m * (r ** j_prime)
-            trading_price = online(data, M_prime, m_prime)
-            average_trading_price = average_trading_price+trading_price
-        average_trading_price = average_trading_price/average_coefficient
-        price_list.append(average_trading_price)
-    print(price_list)
-    print(online(data,M,m))
-    print(H_list)
-
-    #draw
+    #H_list = np.linspace(0,1,20)
+    H_list = [0.05, 0.20, 0.35, 0.50]
+    #H_list = [0.6]
     fig, ax = plt.subplots()
-    ax.plot(H_list, price_list, label='Query Model Solution 1')
+    for H in H_list:
+        buffer = 200
+        eta_list = np.linspace(0, H, int(H*buffer))
+        #eta_list = [0.02]
+        average_coefficient = 500
+        price_list = list()
+        for eta in eta_list:
+            average_trading_price = 0
+            for l in range(average_coefficient):
+                query = generate_query(k, M, m, v_star)
+                if check_query_all_no(query):
+                    query[-1] = 1
+                #print(query)
+                wrong_query = generate_wrong_query(query, H, eta)
+                corrected_query = correct_wrong_answer(wrong_query, H)
+                #corrected_query=generate_wrong_query(query, H, eta)
+                if check_query_all_no(corrected_query):
+                    m_prime = m
+                    M_prime = M
+                else:
+                    i = find_first_yes(corrected_query)
+                    j = find_last_no(corrected_query)
+                    if i > j:
+                        i_prime = j
+                        j_prime = i
+                    else:
+                        alpha = count_alpha(corrected_query, i, j)
+                        p = ceil(k * H)
+                        i_prime = i - p + alpha
+                        j_prime = p + i + alpha - 1
+                        '''
+                        if i_prime < 0 or j_prime > k:
+                            i_prime = 0
+                            j_prime = k
+                        '''
+                        if i_prime < 0:
+                            i_prime = 0
+                        if j_prime > k:
+                            j_prime = k
+
+                    m_prime = m * (r ** i_prime)
+                    M_prime = m * (r ** j_prime)
+                trading_price = online(data, M_prime, m_prime)
+                average_trading_price = average_trading_price + trading_price
+            average_trading_price = average_trading_price/average_coefficient
+            price_list.append(average_trading_price)
+        #draw
+        ax.plot(eta_list, price_list, label="H = %0.2f" % H)
     ax.axhline(pure_online, color='black', ls='dotted', label='Pure Online')
     ax.axhline(v_star, color='red', ls='dotted', label='Best Price')
-    ax.set_xlim([0,1])
-    #plt.xticks([-2.5, -2.0, -1.5, -1.0, -0.5, 0.0, 0.5], ['2.5', '2.0', '1.5', '1.0', '0.5', '0.0', '0.5'])
-    ax.set_xlabel("H")
-    ax.set_ylabel("Average Trading Price")
+    ax.set_xlim([0, H])
+    ax.set_xlabel("$\eta$")
+    ax.set_ylabel("Average Payoff")
+    #ax.set_title("H = %0.1f" % H)
+    ax.set_title("Query Model Solution 1")
     ax.legend(prop={'size': 7})
-    fig.savefig("query_solution1_fig/" + "solution1.png")
+    #fig.savefig("query_solution1_fig/" + "solution1.png")
+    #fig.savefig("query_solution1_fig/" + "H = %0.1f.png" % H)
+
     plt.show()
+
+    #plt.plot(data)
+    #plt.show()
 
 
 if __name__ == '__main__':
