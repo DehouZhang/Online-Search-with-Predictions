@@ -73,7 +73,7 @@ def main():
     starting_day = 580
     whole_period = 300
     trading_period = 200
-    coefficient = 100000
+    eta_coefficient = 100000
     data = load_data_set("data\ETHUSD.csv", starting_day, trading_period)
     M, m = get_maxmin("data\ETHUSD.csv", starting_day, whole_period)
     v_star = max(data)
@@ -90,8 +90,8 @@ def main():
     Hp_bound = (M - m) / M
     fig, ax = plt.subplots()
     for r in r_list:
-        eta_list_n = np.linspace(0, Hn_bound, int(Hn_bound * coefficient)).tolist()
-        eta_list_p = np.linspace(0, Hp_bound, int(Hn_bound * coefficient)).tolist()
+        eta_list_n = np.linspace(0, Hn_bound, int(Hn_bound * eta_coefficient)).tolist()
+        eta_list_p = np.linspace(0, Hp_bound, int(Hn_bound * eta_coefficient)).tolist()
         payoff_list_n = list()
         payoff_list_p = list()
 
@@ -108,7 +108,8 @@ def main():
         ax.plot(eta_list, payoff_list, label='r=%0.2f' % r)
 
     ax.axhline(online, color='black', ls='dotted', label='Pure Online')
-    # plt.xticks([-2.5, -2.0, -1.5, -1.0, -0.5, 0.0, 0.5], ['2.5', '2.0', '1.5', '1.0', '0.5', '0.0', '0.5'])
+    # ax.set_xlim([-Hn_bound, Hp_bound])
+    plt.xticks([-3.5,-3, -2.5, -2.0, -1.5, -1.0, -0.5, 0.0, 0.5], ['3.5', '3.0', '2.5', '2.0', '1.5', '1.0', '0.5', '0','0.5'])
     ax.set_xlabel("$\eta$")
     ax.set_ylabel("Payoff")
     ax.legend(prop={'size': 7})
@@ -116,12 +117,12 @@ def main():
     plt.show()
 
     # H aware
-    Hn_Hp_list = [(0.05, 0.05), (0.05, 0.1), (0.2, 0.2), (0.4, 0.4)]
+    Hn_Hp_list = [(0.05, 0.05), (0.1,0.1), (0.1, 0.3), (0.3, 0.3), (0.4, 0.4)]
     fig, ax = plt.subplots()
 
     for hn_hp in Hn_Hp_list:
-        eta_list_n = np.linspace(0, hn_hp[0], int(hn_hp[0]*coefficient)).tolist()
-        eta_list_p = np.linspace(0, hn_hp[1], int(hn_hp[1]*coefficient)).tolist()
+        eta_list_n = np.linspace(0, hn_hp[0], int(hn_hp[0]*eta_coefficient)).tolist()
+        eta_list_p = np.linspace(0, hn_hp[1], int(hn_hp[1]*eta_coefficient)).tolist()
         payoff_list_n = list()
         payoff_list_p = list()
 
@@ -136,9 +137,10 @@ def main():
         eta_list_n = [-x for x in eta_list_n]
         eta_list = eta_list_n[::-1] + eta_list_p
 
-        ax.plot(eta_list, payoff_list, label='$H_n$=%0.2f, $H_p$=%0.2f' % (hn_hp[0], hn_hp[1]))
+        ax.plot(eta_list, payoff_list, label='$H_n$=%0.2f, $H_p$=%0.2f' % (hn_hp[0], hn_hp[1]),alpha = 0.7)
     ax.axhline(online, color='black', ls='dotted', label='Pure Online')
-    # plt.xticks([-0.3, -0.2, -0.1, 0.0, 0.1, 0.2, 0.3], ['0.3', '0.2', '0.1', '0.0', '0.1', '0.2', '0.3'])
+    #ax.set_xlim([-Hn_bound, Hp_bound])
+    plt.xticks([-0.4, -0.3, -0.2, -0.1, 0, 0.1, 0.2, 0.3, 0.4], ['0.4', '0.3', '0.2', '0.1', '0', '0.1', '0.2', '0.3', '0.4'])
     ax.set_xlabel("$\eta$")
     ax.set_ylabel("Payoff")
 
