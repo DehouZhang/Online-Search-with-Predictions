@@ -3,6 +3,7 @@ import random
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
+import csv
 
 
 def load_data_set(file_name, starting_day, period):
@@ -29,10 +30,11 @@ def get_size_data(file_name):
     return len(raw_data)
 
 
-def generate_random_data(file_name, period, number_of_data):
+def generate_uniform_data(file_name, period, number_of_data):
     data_size = get_size_data(file_name)
-    random_list = random.sample(range(0, data_size - period), number_of_data)
-    return random_list
+    #random_list = random.sample(range(0, data_size - period), number_of_data)
+    uniform = np.linspace(0, data_size - period, number_of_data, dtype=int)
+    return uniform
 
 
 def online(data, M, m):
@@ -44,7 +46,7 @@ def online(data, M, m):
 def first_greater_element(searching_list, element):
     result = None
     for item in searching_list:
-        if item >= element:
+        if item >= (element-0.0001):
             result = item
             break
     if result is None:
@@ -159,33 +161,49 @@ def check_query_all_no(query):
         return False
 
 
-def plot(result_list, eta_list_all, H_list, average_pure_online, average_best_price):
+def plot(result_list, eta_list_all, H_list, average_pure_online, average_best_price, save_path, x_label, y_label, title):
     fig, ax = plt.subplots()
     for i in range(len(result_list)):
         ax.plot(eta_list_all[i], result_list[i], label='H=%0.2f' % H_list[i])
     ax.axhline(average_pure_online, color='black', ls='dotted', label='Pure Online')
     ax.axhline(average_best_price, color='red', ls='dotted', label='Best Price')
+    ax.set_xlabel(x_label)
+    ax.set_ylabel(y_label)
+    ax.set_title(title)
     plt.legend()
-    #fig.savefig("query_solution1_fig/" + "solution1.png")
+    fig.savefig(save_path)
     plt.show()
 
 
-def main():
-    fileName = "data\ETHUSD.csv"
-    # starting_day = 580
-    whole_period = 200
-    trading_period = 100
-    quantity_of_data = 20
-    k = 80
-    eta_coefficient = 1000
-    average_coefficient = 30
+def save_to_csv(payoff_list,eta_list,H_list,csv_path,pure_online,best_price):
+    myDict = {}
+    for i in range(len(H_list)):
+        myDict["payoff(H=%0.2f)" % H_list[i]] = payoff_list[i]
+    myDict["pure online"] = [pure_online] * len(eta_list[-1])
+    myDict["best price"] =[best_price]* len(eta_list[-1])
+    df = pd.DataFrame.from_dict(myDict, orient='index').transpose()
+    df.to_csv(csv_path)
+    #print(df)
 
-    random_list = generate_random_data(fileName, whole_period, quantity_of_data)
-    H_list = [0.1, 0.2, 0.3,0.4,0.5]
+
+
+def main():
+    fileName = "data\CADJPY.csv"
+    whole_period = 250
+    trading_period = 200
+    quantity_of_data = 20
+    k = 25
+    eta_coefficient = 1000
+    average_coefficient = 100
+    save_path = "query_solution1_fig/" + "cadjpy_solution1.png"
+
+    uniform_list = generate_uniform_data(fileName, whole_period, quantity_of_data)
+    H_list = [0.1, 0.2, 0.3, 0.4, 0.5]
+
     result_list = list()
     average_pure_online = 0
     average_best_price = 0
-    for starting_day in random_list:
+    for starting_day in uniform_list:
         data = load_data_set(fileName, starting_day, trading_period)
         M, m = get_maxmin(fileName, starting_day, whole_period)
         pure_online = online(data, M, m)
@@ -242,36 +260,25 @@ def main():
 
             eta_list_all.append(eta_list)
             sample_result.append(price_array)
-            sample_array = np.array(sample_result)
+        sample_array = np.array(sample_result, dtype=object)
 
         result_list.append(sample_array)
-        result_array = np.array(result_list)
+    result_array = np.array(result_list)
 
     result = list(result_array.mean(axis=0))
     average_pure_online = average_pure_online / quantity_of_data
     average_best_price = average_best_price / quantity_of_data
 
     # draw
-    plot(result, eta_list_all, H_list, average_pure_online, average_best_price)
+    plot(result, eta_list_all, H_list, average_pure_online, average_best_price, save_path, "error $\eta$", "Average Payoff", "Solution 1")
 
-    print("1")
+    csv_path = "experiment_result/CADJPY/" + "solution1.csv"
+    save_to_csv(result, eta_list_all, H_list, csv_path,average_pure_online,average_best_price)
 
 
-'''
-        ax.axhline(pure_online, color='black', ls='dotted', label='Pure Online')
-        ax.axhline(v_star, color='red', ls='dotted', label='Best Price')
-        ax.set_xlim([0, H])
-        ax.set_xlabel("$\eta$")
-        ax.set_ylabel("Average Payoff")
-        ax.set_title("Query Model Solution 1")
-        ax.legend(prop={'size': 7})
-        fig.savefig("query_solution1_fig/" + "solution1.png")
 
-        plt.show()
 
-        #plt.plot(data)
-        #plt.show()
-'''
+
 
 if __name__ == '__main__':
     main()
