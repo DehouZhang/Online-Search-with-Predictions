@@ -178,9 +178,10 @@ def plot(result_list, eta_list_all, H_list, average_pure_online, average_best_pr
 def save_to_csv(payoff_list,eta_list,H_list,csv_path,pure_online,best_price):
     myDict = {}
     for i in range(len(H_list)):
+        myDict["eta(H=%0.2f)" % H_list[i]] = eta_list[i]
         myDict["payoff(H=%0.2f)" % H_list[i]] = payoff_list[i]
     myDict["pure online"] = [pure_online] * len(eta_list[-1])
-    myDict["best price"] =[best_price]* len(eta_list[-1])
+    myDict["best price"] =[best_price] * len(eta_list[-1])
     df = pd.DataFrame.from_dict(myDict, orient='index').transpose()
     df.to_csv(csv_path)
     #print(df)
@@ -188,14 +189,16 @@ def save_to_csv(payoff_list,eta_list,H_list,csv_path,pure_online,best_price):
 
 
 def main():
-    fileName = "data\CADJPY.csv"
+    fileName = "data\BTCUSD.csv"
+    save_path = "query_solution1_fig/" + "btc_solution1.png"
+    csv_path = "experiment_result/BTCUSD/" + "solution1.csv"
     whole_period = 250
     trading_period = 200
     quantity_of_data = 20
     k = 25
     eta_coefficient = 1000
     average_coefficient = 100
-    save_path = "query_solution1_fig/" + "cadjpy_solution1.png"
+
 
     uniform_list = generate_uniform_data(fileName, whole_period, quantity_of_data)
     H_list = [0.1, 0.2, 0.3, 0.4, 0.5]
@@ -272,7 +275,7 @@ def main():
     # draw
     plot(result, eta_list_all, H_list, average_pure_online, average_best_price, save_path, "error $\eta$", "Average Payoff", "Solution 1")
 
-    csv_path = "experiment_result/CADJPY/" + "solution1.csv"
+
     save_to_csv(result, eta_list_all, H_list, csv_path,average_pure_online,average_best_price)
 
 
