@@ -1,12 +1,17 @@
-from math import sqrt, exp, isnan, ceil
+"""
+Experiment: Query model Solution 1
+Generate result and plot the Solution 1 algorithm
+"""
+
+from math import sqrt, ceil
 import random
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-import csv
 
 
 def load_data_set(file_name, starting_day, period):
+    # load data with specific starting date and length
     file = pd.read_csv(file_name, header=None, sep="\t", usecols=[4], skiprows=starting_day, nrows=period)
     raw_data = []
     for i in file.values.tolist():
@@ -15,6 +20,7 @@ def load_data_set(file_name, starting_day, period):
 
 
 def get_maxmin(file_name, starting_day, period):
+    # get the maximum and minimum price of the specific data sample
     file = pd.read_csv(file_name, header=None, sep="\t", usecols=[4], skiprows=starting_day, nrows=period)
     raw_data = []
     for i in file.values.tolist():
@@ -23,6 +29,7 @@ def get_maxmin(file_name, starting_day, period):
 
 
 def get_size_data(file_name):
+    # return the size of the dataset
     file = pd.read_csv(file_name, header=None, sep="\t", usecols=[4])
     raw_data = []
     for i in file.values.tolist():
@@ -31,22 +38,25 @@ def get_size_data(file_name):
 
 
 def generate_uniform_data(file_name, period, number_of_data):
+    # generate starting date uniformly in a specific range
     data_size = get_size_data(file_name)
-    #random_list = random.sample(range(0, data_size - period), number_of_data)
     uniform = np.linspace(0, data_size - period, number_of_data, dtype=int)
     return uniform
 
 
 def online(data, M, m):
+    # pure online algorithm
+    # return the payoff of the pure online algorithm
     reservation_price = sqrt(M * m)
     trade_price = first_greater_element(data, reservation_price)
     return trade_price
 
 
 def first_greater_element(searching_list, element):
+    # return the first element in a list which is greater than a value
     result = None
     for item in searching_list:
-        if item >= (element-0.0001):
+        if item >= (element - 0.0001):
             result = item
             break
     if result is None:
@@ -55,6 +65,7 @@ def first_greater_element(searching_list, element):
 
 
 def generate_query(k, M, m, v_star):
+    # generate correct query
     r = (M / m) ** (1 / k)
     target = m * r
     query = list()
@@ -65,23 +76,26 @@ def generate_query(k, M, m, v_star):
         else:
             query.append(1)
             target = target * r
-    return query
+    return query    # return the correct query
 
 
 def generate_wrong_query(query, H, eta):
+    # generate wrong query
     k = len(query)
-    p = ceil(k * H)
     wrong_number = ceil(k * eta)
+    # randomly flip bit to generate wrong query
     wrong_position_list = random.sample(range(0, k), wrong_number)  # random from 0 to 99
+    # 0 means "NO" and 1 means "YES"
     for i in wrong_position_list:
         if query[i] == 0:
             query[i] = 1
         else:
             query[i] = 0
-    return query
+    return query    # return the wrong query
 
 
 def check_no_answers(query, position, H):
+    # check if the number of "NO" after the current "Yes" is greater than p
     k = len(query)
     p = ceil(k * H)
     count = 0
@@ -95,6 +109,7 @@ def check_no_answers(query, position, H):
 
 
 def check_yes_answers(query, position, H):
+    # check if the number of "Yes" before the current "NO" is greater than p
     k = len(query)
     p = ceil(k * H)
     count = 0
@@ -108,7 +123,9 @@ def check_yes_answers(query, position, H):
 
 
 def correct_wrong_answer(query, H):
+    # correct the wrong answers in the wrong query
     k = len(query)
+    # randomly pick the order to check all queries
     position_list = random.sample(range(0, k), k)
     for i in position_list:
         if i == 0:
@@ -126,22 +143,25 @@ def correct_wrong_answer(query, H):
             else:
                 if check_no_answers(query, i, H):
                     query[i] = 0
-    return query
+    return query    # return the corrected query
 
 
 def find_first_yes(query):
+    # find the position of the first "Yes" query
     for i in range(len(query)):
         if query[i] == 1:
             return i
 
 
 def find_last_no(query):
+    # find the position of the last "No" query
     for i in reversed(range(len(query))):
         if query[i] == 0:
             return i
 
 
 def count_alpha(query, i, j):
+    # count the number of "No" between position i and j
     alpha = 0
     for k in range(i, j):
         if query[k] == 0:
@@ -150,10 +170,12 @@ def count_alpha(query, i, j):
 
 
 def check_query_all_no(query):
+    # check if query is full of "No" query
     count = 0
     for i in range(len(query)):
         if query[i] == 1:
             count = count + 1
+    # if full of "No", set the last query to "YES"
     if count == 0:
         query[-1] = 1
         return True
@@ -161,7 +183,9 @@ def check_query_all_no(query):
         return False
 
 
-def plot(result_list, eta_list_all, H_list, average_pure_online, average_best_price, save_path, x_label, y_label, title):
+def plot(result_list, eta_list_all, H_list, average_pure_online, average_best_price, save_path, x_label, y_label,
+         title):
+    # plot the figure
     fig, ax = plt.subplots()
     for i in range(len(result_list)):
         ax.plot(eta_list_all[i], result_list[i], label='H=%0.2f' % H_list[i])
@@ -175,43 +199,49 @@ def plot(result_list, eta_list_all, H_list, average_pure_online, average_best_pr
     plt.show()
 
 
-def save_to_csv(payoff_list,eta_list,H_list,csv_path,pure_online,best_price):
+def save_to_csv(payoff_list, eta_list, H_list, csv_path, pure_online, best_price):
     myDict = {}
+    # save result to csv file
     for i in range(len(H_list)):
         myDict["eta(H=%0.2f)" % H_list[i]] = eta_list[i]
         myDict["payoff(H=%0.2f)" % H_list[i]] = payoff_list[i]
     myDict["pure online"] = [pure_online] * len(eta_list[-1])
-    myDict["best price"] =[best_price] * len(eta_list[-1])
+    myDict["best price"] = [best_price] * len(eta_list[-1])
     df = pd.DataFrame.from_dict(myDict, orient='index').transpose()
     df.to_csv(csv_path)
-    #print(df)
-
+    # print(df)
 
 
 def main():
-    fileName = "data\BTCUSD.csv"
-    save_path = "query_solution1_fig/" + "btc_solution1.png"
-    csv_path = "experiment_result/BTCUSD/" + "solution1.csv"
-    whole_period = 250
-    trading_period = 200
-    quantity_of_data = 20
-    k = 25
-    eta_coefficient = 1000
-    average_coefficient = 100
+    #choose dataset
+    data_name = "ETHUSD"
+    #data_name = "BTCUSD"
+    #data_name = "CADJPY"
 
+    fileName = "data/" + data_name + ".csv"
+    save_path = "query_solution1_fig/" + data_name + "_solution1.png"   # path to save figures
+    csv_path = "experiment_result/" + data_name + "/" + "solution1.csv" # path to save csv file
+    whole_period = 250      # the whole period
+    trading_period = 200    # the trading period
+    quantity_of_data = 20   # the number of data sample
+    k = 25                  # The value of k in solution 1
+    eta_coefficient = 1000  # the coefficient determines how many data point for error
+    average_coefficient = 100   # the coefficient determines how many time we generate wrong queries for each error
 
-    uniform_list = generate_uniform_data(fileName, whole_period, quantity_of_data)
-    H_list = [0.1, 0.2, 0.3, 0.4, 0.5]
+    uniform_list = generate_uniform_data(fileName, whole_period, quantity_of_data)  # generate starting point uniformly
+    H_list = [0.1, 0.2, 0.3, 0.4, 0.5]      # The value of H we want to test
 
     result_list = list()
-    average_pure_online = 0
-    average_best_price = 0
+    average_pure_online = 0     # initial the average payoff of pure online algorithm
+    average_best_price = 0      # initial the average best price
+
+    # We take average payoff in 20 data samples
     for starting_day in uniform_list:
         data = load_data_set(fileName, starting_day, trading_period)
         M, m = get_maxmin(fileName, starting_day, whole_period)
-        pure_online = online(data, M, m)
-        v_star = max(data)
-        r = (M / m) ** (1 / k)
+        pure_online = online(data, M, m)    # the payoff of pure online algorithm
+        v_star = max(data)                  # the best price
+        r = (M / m) ** (1 / k)              # calculate r
         average_pure_online += pure_online
         average_best_price += v_star
 
@@ -221,14 +251,13 @@ def main():
             eta_list = np.linspace(0, H, int(H * eta_coefficient))
             price_list = list()
             for eta in eta_list:
-
                 average_trading_price = 0
                 for l in range(average_coefficient):
-                    query = generate_query(k, M, m, v_star)
-                    if check_query_all_no(query):
+                    query = generate_query(k, M, m, v_star)   # generate the correct query
+                    if check_query_all_no(query):   # if query is full of "YES", flip the last point to "YES"
                         query[-1] = 1
-                    wrong_query = generate_wrong_query(query, H, eta)
-                    corrected_query = correct_wrong_answer(wrong_query, H)
+                    wrong_query = generate_wrong_query(query, H, eta)   # generate wrong query
+                    corrected_query = correct_wrong_answer(wrong_query, H)  # correct the wrong query
                     if check_query_all_no(corrected_query):
                         m_prime = m
                         M_prime = M
@@ -236,18 +265,15 @@ def main():
                         i = find_first_yes(corrected_query)
                         j = find_last_no(corrected_query)
                         if i > j:
-                            i_prime = j
+                            i_prime = j         # calculate i_prime and j_prime
                             j_prime = i
                         else:
                             alpha = count_alpha(corrected_query, i, j)
                             p = ceil(k * H)
                             i_prime = i - p + alpha
                             j_prime = p + i + alpha - 1
-                            '''
-                            if i_prime < 0 or j_prime > k:
-                                i_prime = 0
-                                j_prime = k
-                            '''
+
+                            # if i_prime is out of range or j_prime is out of range
                             if i_prime < 0:
                                 i_prime = 0
                             if j_prime > k:
@@ -257,7 +283,7 @@ def main():
                         M_prime = m * (r ** j_prime)
                     trading_price = online(data, M_prime, m_prime)
                     average_trading_price = average_trading_price + trading_price
-                average_trading_price = average_trading_price / average_coefficient
+                average_trading_price = average_trading_price / average_coefficient     # calculate the average trading price
                 price_list.append(average_trading_price)
                 price_array = np.array(price_list)
 
@@ -268,19 +294,15 @@ def main():
         result_list.append(sample_array)
     result_array = np.array(result_list)
 
-    result = list(result_array.mean(axis=0))
-    average_pure_online = average_pure_online / quantity_of_data
-    average_best_price = average_best_price / quantity_of_data
+    result = list(result_array.mean(axis=0))        # take average payoff from all data samples
+    average_pure_online = average_pure_online / quantity_of_data    # take average payoff of pure online algorithm from all data samples
+    average_best_price = average_best_price / quantity_of_data      # take average best price from all data samples
 
     # draw
-    plot(result, eta_list_all, H_list, average_pure_online, average_best_price, save_path, "error $\eta$", "Average Payoff", "Solution 1")
-
-
-    save_to_csv(result, eta_list_all, H_list, csv_path,average_pure_online,average_best_price)
-
-
-
-
+    plot(result, eta_list_all, H_list, average_pure_online, average_best_price, save_path, "error $\eta$",
+         "Average Payoff", "Solution 1")
+    # save result to csv file
+    save_to_csv(result, eta_list_all, H_list, csv_path, average_pure_online, average_best_price)
 
 
 if __name__ == '__main__':

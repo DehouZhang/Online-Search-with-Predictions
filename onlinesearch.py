@@ -177,9 +177,13 @@ def save_to_csv_ha(payoff_list, eta_list, H_list, csv_path, pure_online, best_pr
 
 
 def main():
-    fileName = "data\ETHUSD.csv"  # choose the dataset
-    # fileName = "data\CADJPY.csv"
-    # fileName = "data\BTCUSD.csv"
+    # choose dataset
+    data_name = "ETHUSD"
+    #data_name = "BTCUSD"
+    #data_name = "CADJPY"
+
+    fileName = "data/" + data_name + ".csv"  # choose the dataset
+
     whole_period = 250  # set the whole period to 250 days
     trading_period = 200  # set the trading period to 200 days
     eta_coefficient = 1000  # the coefficient determines how many data point for error
@@ -221,16 +225,13 @@ def main():
         eta_list_all_ho.append(eta_list)
         payoff_list_all_ho.append(payoff_list)
 
-    save_path_ho = "predict_price_fig/" + "eth_h_oblivious.png"  # the path to save the figure
-    # save_path_ho = "predict_price_fig/" + "btc_h_oblivious.png"
-    # save_path_ho = "predict_price_fig/" + "cadjpy_h_oblivious.png"
+    save_path_ho = "predict_price_fig/" + data_name + "_h_oblivious.png"  # the path to save the figure
+
     # plot the h_oblivious figure
     plot_h_oblivious(payoff_list_all_ho, eta_list_all_ho, r_list, pure_online, v_star, save_path=save_path_ho,
                      x_label="error $\eta$", y_label="Payoff", title="H-Oblivious")
     # the path to save the csv file
-    csv_path_ho = "experiment_result/ETHUSD/" + "H_oblivious.csv"
-    # csv_path_ho = "experiment_result/BTCUSD/" + "H_oblivious.csv"
-    # csv_path_ho = "experiment_result/CADJPY/" + "H_oblivious.csv"
+    csv_path_ho = "experiment_result/" + data_name + "/" + "H_oblivious.csv"
     # save the result of h_oblivious algorithm to csv file
     save_to_csv_ho(payoff_list_all_ho, eta_list_all_ho, r_list, csv_path_ho, pure_online, v_star)
 
@@ -250,8 +251,8 @@ def main():
         pure_online = online(data, M, m)
         v_star = max(data)
 
-        average_pure_online += pure_online      # sum the payoff of pure online for all data sample
-        average_best_price += v_star            # sum the best price for all data sample
+        average_pure_online += pure_online  # sum the payoff of pure online for all data sample
+        average_best_price += v_star  # sum the best price for all data sample
 
         sample_result = list()
         eta_list_all = list()
@@ -284,21 +285,17 @@ def main():
         result_array = np.array(result_list)
 
     result = list(result_array.mean(axis=0))
-    average_pure_online = average_pure_online / quantity_of_data    # calculate the average payoff of pure online for all data samples
-    average_best_price = average_best_price / quantity_of_data      # calculte the average best price for all data samples
+    average_pure_online = average_pure_online / quantity_of_data  # calculate the average payoff of pure online for all data samples
+    average_best_price = average_best_price / quantity_of_data  # calculte the average best price for all data samples
 
-
-    save_path_ha = "predict_price_fig/" + "eth_h_aware.png"
-    #save_path_ha = "predict_price_fig/" + "btc_h_aware.png"
-    #save_path_ha = "predict_price_fig/" + "cadjpy_h_aware.png"
+    save_path_ha = "predict_price_fig/" + data_name + "_h_aware.png"
 
     # plot H_aware
     plot_h_aware(result, eta_list_all, Hn_Hp_list, average_pure_online, average_best_price, save_path_ha,
                  "error $\eta$", "Average Payoff", "H-Aware")
     # the path to save the result of h-aware
-    csv_path_ha = "experiment_result/ETHUSD/" + "H_aware.csv"
-    #csv_path_ha = "experiment_result/BTCUSD/" + "H_aware.csv"
-    #csv_path_ha = "experiment_result/CADJPY/" + "H_aware.csv"
+
+    csv_path_ha = "experiment_result/" + data_name + "/" + "H_aware.csv"
 
     # save the result to csv file
     save_to_csv_ha(result, eta_list_all, Hn_Hp_list, csv_path_ha, average_pure_online, average_best_price)
