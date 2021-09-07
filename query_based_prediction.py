@@ -214,12 +214,13 @@ def save_to_csv(payoff_list, eta_list, H_list, csv_path, pure_online, best_price
 
 def main():
     #choose dataset
-    data_name = "ETHUSD"
-    #data_name = "BTCUSD"
+    #data_name = "ETHUSD"
+    data_name = "BTCUSD"
     #data_name = "CADJPY"
+    #data_name = "EURUSD"
 
     fileName = "data/" + data_name + ".csv"
-    save_path = "query_solution1_fig/" + data_name + "_solution1.png"   # path to save figures
+    save_path = "experiment_result/" + data_name + "/" + data_name + "_solution1.png"   # path to save figures
     csv_path = "experiment_result/" + data_name + "/" + "solution1.csv" # path to save csv file
     whole_period = 250      # the whole period
     trading_period = 200    # the trading period
@@ -281,7 +282,8 @@ def main():
 
                         m_prime = m * (r ** i_prime)
                         M_prime = m * (r ** j_prime)
-                    trading_price = online(data, M_prime, m_prime)
+                    #trading_price = online(data, M_prime, m_prime)
+                    trading_price = first_greater_element(data,m_prime)
                     average_trading_price = average_trading_price + trading_price
                 average_trading_price = average_trading_price / average_coefficient     # calculate the average trading price
                 price_list.append(average_trading_price)
