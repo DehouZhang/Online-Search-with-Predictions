@@ -160,8 +160,8 @@ def plot_h_oblivious_ratio(result, eta_list, r_list, pure_online, best_price, sa
     pure_online_ratio = list()
 
     for i in range(len(eta_list)):
-        best_price_ratio.append(best_price[i]/best_price[i])
-        pure_online_ratio.append(pure_online[i]/best_price[i])
+        best_price_ratio.append(best_price[i] / best_price[i])
+        pure_online_ratio.append(pure_online[i] / best_price[i])
 
     fig, ax = plt.subplots()
     for i in range(len(result)):
@@ -204,9 +204,9 @@ def save_to_csv_ha(payoff_list, eta_list, H_list, csv_path, pure_online, best_pr
 def main():
     # choose dataset
     #data_name = "ETHUSD"
-    data_name = "BTCUSD"
+    #data_name = "BTCUSD"
     #data_name = "CADJPY"
-    #data_name = "EURUSD"
+    data_name = "EURUSD"
 
     fileName = "data/" + data_name + ".csv"  # choose the dataset
 
@@ -220,63 +220,25 @@ def main():
 
     r_list = [0.5, 0.75, 1, 1.25, 1.5]  # the value of r to experiment
     result_list = list()  # create the list of payoff for different value of r for H_Oblivious algorithm
-    Hn_max = 0
-    Hp_max = 0
 
-    # generate a universal eta list for all Hn and Hp value
-    for starting_day in uniform_list:
-        M, m = get_maxmin(fileName, starting_day, whole_period)
-        Hn_bound_float = (M - m) / m  # the upper-bound of the value of negative error
-        Hp_bound_float = (M - m) / M  # the upper-bound of the value of positive error
-        # convert Hn and Hp to 2 decimal
-        Hn_bound = round(Hn_bound_float, 2)
-        Hp_bound = round(Hp_bound_float, 2)
-
-        if Hn_bound > Hn_bound_float:
-            Hn_bound = Hn_bound - 0.001
-
-        if Hp_bound > Hp_bound_float:
-            Hp_bound = Hp_bound - 0.001
-
-        #print(Hn_bound, Hp_bound)
-        if Hn_bound > Hn_max:
-            Hn_max = Hn_bound
-
-        if Hp_bound > Hp_max:
-            Hp_max = Hp_bound
-
-
-    whole_eta = np.arange(-0.5, 0.5 + 0.001, 0.001).tolist()
+    # set the range of eta to be [-0.5,0.5]
+    whole_eta = np.arange(-0.5, 0.5 + 0.001, 0.001).tolist()   # the value of eta are equally distanced from -0.5 to 0.5 with step=0.001
     whole_eta = [round(x, 3) for x in whole_eta]
 
     result_best_price_list_all = list()
     result_pure_online_list_all = list()
-    last_day =0
+
     for starting_day in uniform_list:
         data = load_data_set(fileName, starting_day, trading_period)
-        last_day+=data[-1]
         M, m = get_maxmin(fileName, starting_day, whole_period)
         pure_online = online(data, M, m)
         v_star = max(data)
-        '''
-        Hn_bound_float = (M - m) / m  # the upper-bound of the value of negative error
-        Hp_bound_float = (M - m) / M  # the upper-bound of the value of positive error
-
-        # convert Hn and Hp to 2 decimal
-        Hn_bound = round(Hn_bound_float, 2)
-        Hp_bound = round(Hp_bound_float, 2)
-
-        if Hn_bound > Hn_bound_float:
-            Hn_bound = Hn_bound - 0.01
-
-        if Hp_bound > Hp_bound_float:
-            Hp_bound = Hp_bound - 0.01
-        '''
+        # set the range of eta of this data sample to be [-0.5,0.5]
         Hn_bound = 0.5
         Hp_bound = 0.5
-        sample_pure_online_list = list()
-        sample_best_price_list = list()
-        sample_result = list()
+        sample_pure_online_list = list()    # contain pure online payoff for this data sample
+        sample_best_price_list = list()     # contain best price for this data sample
+        sample_result = list()              # contain payoff for this data sample
 
         for r in r_list:
             # create the list of negative and positive value of eta
@@ -304,9 +266,10 @@ def main():
             right_index = whole_eta.index(eta_list[-1])
 
             payoff_list = [0] * left_index + payoff_list + [0] * (len(whole_eta) - right_index - 1)
-            pure_online_list = [0] * left_index + [pure_online] * len(eta_list) + [0] * (len(whole_eta) - right_index - 1)
-            best_price_list = [0] * left_index + [v_star] * len(eta_list) + [0] * (
+            pure_online_list = [0] * left_index + [pure_online] * len(eta_list) + [0] * (
                         len(whole_eta) - right_index - 1)
+            best_price_list = [0] * left_index + [v_star] * len(eta_list) + [0] * (
+                    len(whole_eta) - right_index - 1)
             sample_pure_online_list.append(pure_online_list)
             sample_best_price_list.append(best_price_list)
 
@@ -316,8 +279,6 @@ def main():
         result_pure_online_list_all.append(sample_pure_online_list)
         result_best_price_list_all.append(sample_best_price_list)
 
-    last_day = last_day/quantity_of_data
-    print(last_day)
     result_best_price_list = list()
     result_pure_online_list = list()
     for i in result_best_price_list_all:
@@ -334,7 +295,6 @@ def main():
     payoff_h4 = list()
     payoff_h5 = list()
 
-
     for sample_list in result_list:
         payoff_h1.append(np.array(sample_list[0]))
         payoff_h2.append(np.array(sample_list[1]))
@@ -348,11 +308,8 @@ def main():
     array_h4 = np.array(payoff_h4, dtype=object)
     array_h5 = np.array(payoff_h5, dtype=object)
 
-
-    count_zero= array_h1.T
-
-    average_number= list()
-
+    count_zero = array_h1.T
+    average_number = list()
 
     for i in count_zero:
         average_number.append(np.count_nonzero(i))
@@ -384,20 +341,17 @@ def main():
     for i in range(len(best_price_h)):
         best_price_h[i] = best_price_h[i] / average_number[i]
 
+    result = [result_h1, result_h2, result_h3, result_h4, result_h5]
 
-
-    result = [result_h1, result_h2, result_h3, result_h4,result_h5]
-
-
+    # the path to save the figure
     save_path_ho = "experiment_result/" + data_name + "/" + data_name + "_h_oblivious.png"  # the path to save the figure
     # plot the h_oblivious figure
     plot_h_oblivious(result, whole_eta, r_list, pure_online_h, best_price_h, save_path=save_path_ho,
                      x_label="error $\eta$", y_label="Payoff", title="H-Oblivious")
     # the path to save the csv file
-    csv_path_ho = "experiment_result/" + data_name + "/" + "H_oblivious.csv"
+    csv_path_ho = "experiment_result/" + data_name + "/" + data_name +"_h_oblivious.csv"
     # save the result of h_oblivious algorithm to csv file
     save_to_csv_ho(result, whole_eta, r_list, csv_path_ho, pure_online_h, best_price_h)
-
 
     # H_Aware Algorithm
     # generate starting date uniformly from the dataset
@@ -459,7 +413,7 @@ def main():
                  "error $\eta$", "Average Payoff", "H-Aware")
     # the path to save the result of h-aware
 
-    csv_path_ha = "experiment_result/" + data_name + "/" + "H_aware.csv"
+    csv_path_ha = "experiment_result/" + data_name + "/" + data_name + "_h_aware.csv"
 
     # save the result to csv file
     save_to_csv_ha(result, eta_list_all, Hn_Hp_list, csv_path_ha, average_pure_online, average_best_price)

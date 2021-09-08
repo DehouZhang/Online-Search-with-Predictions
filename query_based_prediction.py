@@ -246,9 +246,9 @@ def main():
     data_name = "EURUSD"
 
     fileName = "data/" + data_name + ".csv"
-    save_path = "experiment_result/" + data_name + "/" + "_solution1_eta_axis.png"  # path to save figures
-    csv_path = "experiment_result/" + data_name + "/" + "solution1_eta_axis.csv"  # path to save csv file
-    whole_period = 250  # the whole period
+    save_path = "experiment_result/" + data_name + "/" + data_name + "_solution1_eta_axis.png"  # path to save figures
+    csv_path = "experiment_result/" + data_name + "/" + data_name + "solution1_eta_axis.csv"  # path to save csv file
+    whole_period = 200  # the whole period
     trading_period = 200  # the trading period
     quantity_of_data = 20  # the number of data sample
     k = 25  # The value of k in solution 1
@@ -305,18 +305,18 @@ def main():
                                 i_prime = 0
                         m_prime = m * (r ** i_prime)
 
-                    trading_price = first_greater_element(data, m_prime)
-                    average_trading_price = average_trading_price + trading_price
+                    trading_price = first_greater_element(data, m_prime)    # get the payoff
+                    average_trading_price = average_trading_price + trading_price   # sum the payoff for next step
                 average_trading_price = average_trading_price / average_coefficient  # calculate the average trading price
                 price_list.append(average_trading_price)
                 price_array = np.array(price_list)
 
-            wrong_bit_list_all.append(wrong_bit_list)
-            sample_result.append(price_array)
+            wrong_bit_list_all.append(wrong_bit_list)   # append the number of wrong bit of this data sample to a list
+            sample_result.append(price_array)           # appen the payoff of this data sample to a list
         sample_array = np.array(sample_result, dtype=object)
 
-        result_list.append(sample_array)
-    result_array = np.array(result_list)
+        result_list.append(sample_array)    # append all payoffs to result_list
+    result_array = np.array(result_list)    # convert result_list to array
 
     result = list(result_array.mean(axis=0))  # take average payoff from all data samples
     average_pure_online = average_pure_online / quantity_of_data  # take average payoff of pure online algorithm from all data samples
@@ -329,7 +329,7 @@ def main():
     # save result to csv file
     save_to_csv(result, wrong_bit_list_all, H_list, csv_path, average_pure_online, average_best_price)
 
-    # The second figure
+    # The second figure: the x axis is H
     result_list = list()
     average_pure_online = 0  # initial the average payoff of pure online algorithm
     average_best_price = 0  # initial the average best price
@@ -392,8 +392,8 @@ def main():
     average_pure_online = average_pure_online / quantity_of_data  # take average payoff of pure online algorithm from all data samples
     average_best_price = average_best_price / quantity_of_data  # take average best price from all data samples
 
-    save_path = "experiment_result/" + data_name + "/" + "_solution1_H_axis.png"  # path to save figures
-    csv_path = "experiment_result/" + data_name + "/" + "solution1_H_axis.csv"  # path to save csv file
+    save_path = "experiment_result/" + data_name + "/" + data_name + "_solution1_H_axis.png"  # path to save figures
+    csv_path = "experiment_result/" + data_name + "/" + data_name + "_solution1_H_axis.csv"  # path to save csv file
     plot_second(result, eta_list, H_list, average_pure_online, average_best_price, save_path, "H", "Average Payoff",
                 "Solution 1")
     save_to_csv_second(result, eta_list, H_list, csv_path, average_pure_online, average_best_price)
