@@ -144,8 +144,33 @@ def plot_h_oblivious(result, eta_list, r_list, pure_online, best_price, save_pat
     fig, ax = plt.subplots()
     for i in range(len(result)):
         ax.plot(eta_list, result[i], label='r=%0.2f' % (r_list[i]))
-    ax.axhline(pure_online, color='black', ls='dotted', label='Pure Online')
-    ax.axhline(best_price, color='red', ls='dotted', label='Best Price')
+    ax.plot(eta_list, pure_online, color='black', ls='dotted', label='Pure Online')
+    ax.plot(eta_list, best_price, color='red', ls='dotted', label='Best Price')
+    ax.set_xlabel(x_label)
+    ax.set_ylabel(y_label)
+    ax.set_title(title)
+    plt.legend()
+    fig.savefig(save_path)
+    plt.show()
+
+
+def plot_h_oblivious_ratio(result, eta_list, r_list, pure_online, best_price, save_path, x_label, y_label, title):
+    # plot the result of H_Oblivious algorithm
+    best_price_ratio = list()
+    pure_online_ratio = list()
+
+    for i in range(len(eta_list)):
+        best_price_ratio.append(best_price[i]/best_price[i])
+        pure_online_ratio.append(pure_online[i]/best_price[i])
+
+    fig, ax = plt.subplots()
+    for i in range(len(result)):
+        for j in range(len(eta_list)):
+            result[i][j] = result[i][j] / best_price[j]
+        ax.plot(eta_list, result[i], label='r=%0.2f' % (r_list[i]))
+        print(result[i])
+    ax.plot(eta_list, pure_online_ratio, color='black', ls='dotted', label='Pure Online')
+    ax.plot(eta_list, best_price_ratio, color='red', ls='dotted', label='Best Price')
     ax.set_xlabel(x_label)
     ax.set_ylabel(y_label)
     ax.set_title(title)
@@ -156,8 +181,8 @@ def plot_h_oblivious(result, eta_list, r_list, pure_online, best_price, save_pat
 
 def save_to_csv_ho(payoff_list, eta_list, r_list, csv_path, pure_online, best_price):
     # save the result of H_oblivious algorithm into csv file
-    myDict = {"eta": eta_list, "pure online": [pure_online] * len(eta_list),
-              "best price": [best_price] * len(eta_list)}
+    myDict = {"eta": eta_list, "pure online": pure_online,
+              "best price": best_price}
     for i in range(len(r_list)):
         myDict["payoff(r=%0.2f)" % r_list[i]] = payoff_list[i]
     df = pd.DataFrame.from_dict(myDict, orient='index').transpose()
@@ -179,23 +204,21 @@ def save_to_csv_ha(payoff_list, eta_list, H_list, csv_path, pure_online, best_pr
 def main():
     # choose dataset
     #data_name = "ETHUSD"
-    #data_name = "BTCUSD"
+    data_name = "BTCUSD"
     #data_name = "CADJPY"
-    data_name = "EURUSD"
+    #data_name = "EURUSD"
 
     fileName = "data/" + data_name + ".csv"  # choose the dataset
 
-    whole_period = 250  # set the whole period to 250 days
+    whole_period = 200  # set the whole period to 250 days
     trading_period = 200  # set the trading period to 200 days
-    eta_coefficient = 100  # the coefficient determines how many data point for error
+    eta_coefficient = 1000  # the coefficient determines how many data point for error
     quantity_of_data = 20  # the number of data sample
 
     # H_Oblivious Algorithm
     uniform_list = generate_uniform_data(fileName, 250, quantity_of_data)
-    average_pure_online = 0
-    average_best_price = 0
 
-    r_list = [0.5, 0.75, 1, 1.5]  # the value of r to experiment
+    r_list = [0.5, 0.75, 1, 1.25, 1.5]  # the value of r to experiment
     result_list = list()  # create the list of payoff for different value of r for H_Oblivious algorithm
     Hn_max = 0
     Hp_max = 0
@@ -210,26 +233,32 @@ def main():
         Hp_bound = round(Hp_bound_float, 2)
 
         if Hn_bound > Hn_bound_float:
-            Hn_bound = Hn_bound - 0.01
+            Hn_bound = Hn_bound - 0.001
 
         if Hp_bound > Hp_bound_float:
-            Hp_bound = Hp_bound - 0.01
+            Hp_bound = Hp_bound - 0.001
 
+        #print(Hn_bound, Hp_bound)
         if Hn_bound > Hn_max:
             Hn_max = Hn_bound
 
         if Hp_bound > Hp_max:
             Hp_max = Hp_bound
 
-    whole_eta = np.arange(-Hn_max, Hp_max + 0.01, 0.01).tolist()
-    whole_eta = [round(x, 2) for x in whole_eta]
 
+    whole_eta = np.arange(-0.5, 0.5 + 0.001, 0.001).tolist()
+    whole_eta = [round(x, 3) for x in whole_eta]
+
+    result_best_price_list_all = list()
+    result_pure_online_list_all = list()
+    last_day =0
     for starting_day in uniform_list:
         data = load_data_set(fileName, starting_day, trading_period)
+        last_day+=data[-1]
         M, m = get_maxmin(fileName, starting_day, whole_period)
         pure_online = online(data, M, m)
         v_star = max(data)
-
+        '''
         Hn_bound_float = (M - m) / m  # the upper-bound of the value of negative error
         Hp_bound_float = (M - m) / M  # the upper-bound of the value of positive error
 
@@ -242,18 +271,19 @@ def main():
 
         if Hp_bound > Hp_bound_float:
             Hp_bound = Hp_bound - 0.01
-
-        average_pure_online += pure_online  # sum the payoff of pure online for all data sample
-        average_best_price += v_star  # sum the best price for all data sample
-
+        '''
+        Hn_bound = 0.5
+        Hp_bound = 0.5
+        sample_pure_online_list = list()
+        sample_best_price_list = list()
         sample_result = list()
 
         for r in r_list:
             # create the list of negative and positive value of eta
-            eta_list_n = np.arange(0, Hn_bound + 0.01, 0.01).tolist()
+            eta_list_n = np.arange(0, Hn_bound + 0.001, 0.001).tolist()
             del (eta_list_n[0])
 
-            eta_list_p = np.arange(0, Hp_bound + 0.01, 0.01).tolist()
+            eta_list_p = np.arange(0, Hp_bound + 0.001, 0.001).tolist()
             # create the list of negative and positive value of payoff
             payoff_list_n = list()
             payoff_list_p = list()
@@ -268,83 +298,106 @@ def main():
 
             eta_list_n = [-x for x in eta_list_n]
             eta_list = eta_list_n[::-1] + eta_list_p
-            eta_list = [round(x, 2) for x in eta_list]
+            eta_list = [round(x, 3) for x in eta_list]
 
             left_index = whole_eta.index(eta_list[0])
             right_index = whole_eta.index(eta_list[-1])
 
             payoff_list = [0] * left_index + payoff_list + [0] * (len(whole_eta) - right_index - 1)
+            pure_online_list = [0] * left_index + [pure_online] * len(eta_list) + [0] * (len(whole_eta) - right_index - 1)
+            best_price_list = [0] * left_index + [v_star] * len(eta_list) + [0] * (
+                        len(whole_eta) - right_index - 1)
+            sample_pure_online_list.append(pure_online_list)
+            sample_best_price_list.append(best_price_list)
 
             sample_result.append(payoff_list)
 
         result_list.append(sample_result)
+        result_pure_online_list_all.append(sample_pure_online_list)
+        result_best_price_list_all.append(sample_best_price_list)
+
+    last_day = last_day/quantity_of_data
+    print(last_day)
+    result_best_price_list = list()
+    result_pure_online_list = list()
+    for i in result_best_price_list_all:
+        result_best_price_list.append(np.array(i[0]))
+    best_price_h = list(np.array(result_best_price_list).sum(axis=0))
+
+    for i in result_pure_online_list_all:
+        result_pure_online_list.append(np.array(i[0]))
+    pure_online_h = list(np.array(result_pure_online_list).sum(axis=0))
 
     payoff_h1 = list()
     payoff_h2 = list()
     payoff_h3 = list()
     payoff_h4 = list()
+    payoff_h5 = list()
+
+
     for sample_list in result_list:
         payoff_h1.append(np.array(sample_list[0]))
         payoff_h2.append(np.array(sample_list[1]))
         payoff_h3.append(np.array(sample_list[2]))
         payoff_h4.append(np.array(sample_list[3]))
+        payoff_h5.append(np.array(sample_list[4]))
 
     array_h1 = np.array(payoff_h1, dtype=object)
     array_h2 = np.array(payoff_h2, dtype=object)
     array_h3 = np.array(payoff_h3, dtype=object)
     array_h4 = np.array(payoff_h4, dtype=object)
+    array_h5 = np.array(payoff_h5, dtype=object)
 
-    count_zero_h1 = array_h1.T
-    count_zero_h2 = array_h2.T
-    count_zero_h3 = array_h3.T
-    count_zero_h4 = array_h4.T
 
-    average_number_h1 = list()
-    average_number_h2 = list()
-    average_number_h3 = list()
-    average_number_h4 = list()
+    count_zero= array_h1.T
 
-    for i in count_zero_h1:
-        average_number_h1.append(np.count_nonzero(i))
+    average_number= list()
+
+
+    for i in count_zero:
+        average_number.append(np.count_nonzero(i))
+
     result_h1 = list(array_h1.sum(axis=0))
+    result_h2 = list(array_h2.sum(axis=0))
+    result_h3 = list(array_h3.sum(axis=0))
+    result_h4 = list(array_h4.sum(axis=0))
+    result_h5 = list(array_h5.sum(axis=0))
 
     for i in range(len(result_h1)):
-        result_h1[i] = result_h1[i] / average_number_h1[i]
-
-    for i in count_zero_h2:
-        average_number_h2.append(np.count_nonzero(i))
-    result_h2 = list(array_h2.sum(axis=0))
+        result_h1[i] = result_h1[i] / average_number[i]
 
     for i in range(len(result_h2)):
-        result_h2[i] = result_h2[i] / average_number_h2[i]
+        result_h2[i] = result_h2[i] / average_number[i]
 
-    for i in count_zero_h3:
-        average_number_h3.append(np.count_nonzero(i))
-    result_h3 = list(array_h3.sum(axis=0))
-
-    for i in range(len(result_h1)):
-        result_h3[i] = result_h3[i] / average_number_h3[i]
-
-    for i in count_zero_h4:
-        average_number_h4.append(np.count_nonzero(i))
-    result_h4 = list(array_h4.sum(axis=0))
+    for i in range(len(result_h3)):
+        result_h3[i] = result_h3[i] / average_number[i]
 
     for i in range(len(result_h4)):
-        result_h4[i] = result_h4[i] / average_number_h4[i]
+        result_h4[i] = result_h4[i] / average_number[i]
 
-    result = [result_h1, result_h2, result_h3, result_h4]
-    average_pure_online = average_pure_online / quantity_of_data  # calculate the average payoff of pure online for all data samples
-    average_best_price = average_best_price / quantity_of_data  # calculte the average best price for all data samples
+    for i in range(len(result_h5)):
+        result_h5[i] = result_h5[i] / average_number[i]
+
+    for i in range(len(pure_online_h)):
+        pure_online_h[i] = pure_online_h[i] / average_number[i]
+
+    for i in range(len(best_price_h)):
+        best_price_h[i] = best_price_h[i] / average_number[i]
+
+
+
+    result = [result_h1, result_h2, result_h3, result_h4,result_h5]
+
 
     save_path_ho = "experiment_result/" + data_name + "/" + data_name + "_h_oblivious.png"  # the path to save the figure
-
     # plot the h_oblivious figure
-    plot_h_oblivious(result, whole_eta, r_list, average_pure_online, average_best_price, save_path=save_path_ho,
+    plot_h_oblivious(result, whole_eta, r_list, pure_online_h, best_price_h, save_path=save_path_ho,
                      x_label="error $\eta$", y_label="Payoff", title="H-Oblivious")
     # the path to save the csv file
     csv_path_ho = "experiment_result/" + data_name + "/" + "H_oblivious.csv"
     # save the result of h_oblivious algorithm to csv file
-    save_to_csv_ho(result, whole_eta, r_list, csv_path_ho, average_pure_online, average_best_price)
+    save_to_csv_ho(result, whole_eta, r_list, csv_path_ho, pure_online_h, best_price_h)
+
 
     # H_Aware Algorithm
     # generate starting date uniformly from the dataset
