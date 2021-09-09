@@ -243,7 +243,7 @@ def main():
     #data_name = "ETHUSD"
     #data_name = "BTCUSD"
     #data_name = "CADJPY"
-    data_name = "EURUSD"
+    #data_name = "EURUSD"
 
     fileName = "data/" + data_name + ".csv"
     save_path = "experiment_result/" + data_name + "/" + data_name + "_solution1_eta_axis.png"  # path to save figures
