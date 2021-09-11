@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import sys
 
+
 def load_data_set(file_name, starting_day, period):
     # load data with specific starting date and length
     file = pd.read_csv(file_name, header=None, sep="\t", usecols=[4], skiprows=starting_day, nrows=period)
@@ -264,10 +265,10 @@ def h_aware(fileName, starting_days, whole_period, trading_period, Hn_Hp_list, H
 
         # for different value of Hn and Hp, calculate eta list and payoff list
         for hn_hp in Hn_Hp_list:
-            #eta_list_n = np.linspace(0, hn_hp[0], eta_number).tolist()
-            #eta_list_p = np.linspace(0, hn_hp[1], eta_number).tolist()
-            left_bound = ceil(hn_hp[0]/Hn_bound * len(eta_list_n_all))
-            right_bound = ceil(hn_hp[1]/Hp_bound * len(eta_list_p_all))
+            # eta_list_n = np.linspace(0, hn_hp[0], eta_number).tolist()
+            # eta_list_p = np.linspace(0, hn_hp[1], eta_number).tolist()
+            left_bound = ceil(hn_hp[0] / Hn_bound * len(eta_list_n_all))
+            right_bound = ceil(hn_hp[1] / Hp_bound * len(eta_list_p_all))
             eta_list_n = eta_list_n_all[0:left_bound]
             eta_list_p = eta_list_p_all[0:right_bound]
             payoff_list_n = list()
@@ -280,7 +281,7 @@ def h_aware(fileName, starting_days, whole_period, trading_period, Hn_Hp_list, H
                 payoff_list_p.append(h_aware_positive(data, v_star, hn_hp[0], hn_hp[1], eta_p, M, m))
 
             payoff_list = payoff_list_n[::-1] + payoff_list_p
-            #payoff_list = [None] * left_bound + payoff_list +[None] * (len(eta_list_n_all)+len(eta_list_p_all) - right_bound -1)
+            # payoff_list = [None] * left_bound + payoff_list +[None] * (len(eta_list_n_all)+len(eta_list_p_all) - right_bound -1)
             payoff_array = np.array(payoff_list)
             sample_result.append(payoff_array)
             sample_array = np.array(sample_result, dtype=object)
@@ -294,8 +295,8 @@ def h_aware(fileName, starting_days, whole_period, trading_period, Hn_Hp_list, H
     result = [list(x) for x in result]
 
     for i in range(len(result)):
-        length = int(len(result[i])/2)
-        result[i] = [None] * (eta_number-length) + result[i] + [None] * (eta_number-length)
+        length = int(len(result[i]) / 2)
+        result[i] = [None] * (eta_number - length) + result[i] + [None] * (eta_number - length)
 
     average_pure_online = pure_online_sum / quantity_of_data  # calculate the average payoff of pure online for all data samples
     average_best_price = best_price_sum / quantity_of_data  # calculte the average best price for all data samples
@@ -303,10 +304,10 @@ def h_aware(fileName, starting_days, whole_period, trading_period, Hn_Hp_list, H
 
 
 def main():
-    #data_set = "ETHUSD"
-    #data_set = "BTCUSD"
-    #data_set = "CADJPY"
-    #data_set = "EURUSD"
+    # data_set = "ETHUSD"
+    # data_set = "BTCUSD"
+    # data_set = "CADJPY"
+    # data_set = "EURUSD"
 
     data_set = sys.argv[1]
     fileName = "data/" + data_set + ".csv"  # choose the dataset
@@ -327,7 +328,9 @@ def main():
         Hn_bound = 0.04
         Hn_Hp_list = [(0.005, 0.005), (0.01, 0.01), (0.02, 0.02), (0.03, 0.03), (0.04, 0.04)]
 
-    result, eta_list, average_pure_online, average_best_price = h_oblivious(fileName, starting_days, whole_period, trading_period, r_list, Hn_bound, Hp_bound, eta_number)
+    result, eta_list, average_pure_online, average_best_price = h_oblivious(fileName, starting_days, whole_period,
+                                                                            trading_period, r_list, Hn_bound, Hp_bound,
+                                                                            eta_number)
 
     save_path_ho = "experiment_result/" + data_set + "/ORA.png"  # the path to save the figure
     # plot the h_oblivious figure
@@ -339,7 +342,8 @@ def main():
     save_to_csv_ho(result, eta_list, r_list, csv_path_ho, average_pure_online, average_best_price)
 
     eta_list_all, result, average_pure_online, average_best_price = h_aware(fileName, starting_days,
-                                                                            whole_period, trading_period, Hn_Hp_list,Hn_bound,Hp_bound,
+                                                                            whole_period, trading_period, Hn_Hp_list,
+                                                                            Hn_bound, Hp_bound,
                                                                             eta_number)
     save_path_ha = "experiment_result/" + data_set + "/Robust.png"
 

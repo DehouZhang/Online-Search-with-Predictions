@@ -241,10 +241,10 @@ def save_to_csv_second(payoff_list, eta_list, H_list, csv_path, pure_online, bes
 
 def main():
     # choose dataset
-    #data_set = "ETHUSD"
-    #data_set = "BTCUSD"
-    #data_set = "CADJPY"
-    #data_set = "EURUSD"
+    # data_set = "ETHUSD"
+    # data_set = "BTCUSD"
+    # data_set = "CADJPY"
+    # data_set = "EURUSD"
 
     data_set = sys.argv[1]
 
@@ -278,7 +278,7 @@ def main():
         wrong_bit_list_all = list()
 
         for H in H_list:
-            wrong_bit_list = list(range(ceil(H * k)+1))
+            wrong_bit_list = list(range(ceil(H * k) + 1))
             price_list = list()
             for wrong_bit in wrong_bit_list:
                 average_trading_price = 0
@@ -308,18 +308,18 @@ def main():
                                 i_prime = 0
                         m_prime = m * (r ** i_prime)
 
-                    trading_price = first_greater_element(data, m_prime)    # get the payoff
-                    average_trading_price = average_trading_price + trading_price   # sum the payoff for next step
+                    trading_price = first_greater_element(data, m_prime)  # get the payoff
+                    average_trading_price = average_trading_price + trading_price  # sum the payoff for next step
                 average_trading_price = average_trading_price / average_coefficient  # calculate the average trading price
                 price_list.append(average_trading_price)
                 price_array = np.array(price_list)
 
-            wrong_bit_list_all.append(wrong_bit_list)   # append the number of wrong bit of this data sample to a list
-            sample_result.append(price_array)           # appen the payoff of this data sample to a list
+            wrong_bit_list_all.append(wrong_bit_list)  # append the number of wrong bit of this data sample to a list
+            sample_result.append(price_array)  # appen the payoff of this data sample to a list
         sample_array = np.array(sample_result, dtype=object)
 
-        result_list.append(sample_array)    # append all payoffs to result_list
-    result_array = np.array(result_list)    # convert result_list to array
+        result_list.append(sample_array)  # append all payoffs to result_list
+    result_array = np.array(result_list)  # convert result_list to array
 
     result = list(result_array.mean(axis=0))  # take average payoff from all data samples
     average_pure_online = average_pure_online / quantity_of_data  # take average payoff of pure online algorithm from all data samples
@@ -400,6 +400,7 @@ def main():
     plot_second(result, eta_list, H_list, average_pure_online, average_best_price, save_path, "H", "average profit",
                 "RLIS-H")
     save_to_csv_second(result, eta_list, H_list, csv_path, average_pure_online, average_best_price)
+
 
 if __name__ == '__main__':
     main()
