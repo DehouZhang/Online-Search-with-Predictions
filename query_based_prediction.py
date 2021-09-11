@@ -244,9 +244,9 @@ def main():
     #data_set = "ETHUSD"
     #data_set = "BTCUSD"
     #data_set = "CADJPY"
-    data_set = "EURUSD"
+    #data_set = "EURUSD"
 
-    #data_set = sys.argv[1]
+    data_set = sys.argv[1]
 
     fileName = "data/" + data_set + ".csv"
     save_path = "experiment_result/" + data_set + "/RLIS.png"  # path to save figures
