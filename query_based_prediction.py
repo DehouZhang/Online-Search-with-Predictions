@@ -183,8 +183,144 @@ def check_query_all_no(query):
         return False
 
 
-def plot(result_list, eta_list_all, H_list, average_pure_online, average_best_price, save_path, x_label, y_label,
-         title):
+def get_m_prime_RLIS(corrected_query, m, k, H, r):
+    if check_query_all_no(corrected_query):
+        m_prime = m
+    else:
+        i = find_first_yes(corrected_query)
+        j = find_last_no(corrected_query)
+        if i > j:
+            i_prime = j  # calculate i_prime and j_prime
+        else:
+            alpha = count_alpha(corrected_query, i, j)
+            p = ceil(k * H)
+            i_prime = i - p + alpha
+
+            # if i_prime is out of range or j_prime is out of range
+            if i_prime < 0:
+                i_prime = 0
+        m_prime = m * (r ** i_prime)
+    return m_prime
+
+
+def get_m_prime_RLIS_H(corrected_query, m, k, H, r):
+    if check_query_all_no(corrected_query):
+        m_prime = m
+    else:
+        i = find_first_yes(corrected_query)
+        j = find_last_no(corrected_query)
+        if j is None:
+            i_prime = k
+        else:
+            if i > j:
+                i_prime = j  # calculate i_prime and j_prime
+            else:
+                alpha = count_alpha(corrected_query, i, j)
+                i_prime = i - H + alpha
+
+            # if i_prime is out of range or j_prime is out of range
+            if i_prime < 0:
+                i_prime = 0
+        m_prime = m * (r ** i_prime)
+    return m_prime
+
+
+def RLIS(fileName, starting_days, whole_period, quantity_of_data, trading_period, H_list, k, average_coefficient):
+    pure_online_sum = 0
+    best_price_sum = 0
+    result_list = list()
+
+    for starting_day in starting_days:
+        data = load_data_set(fileName, starting_day, trading_period)
+        M, m = get_maxmin(fileName, starting_day, whole_period)
+        pure_online = online(data, M, m)  # the payoff of pure online algorithm
+        v_star = max(data)  # the best price
+        r = (M / m) ** (1 / k)  # calculate r
+        pure_online_sum += pure_online
+        best_price_sum += v_star
+        wrong_bit_list_all = list()
+        sample_result = list()
+
+        for H in H_list:
+            price_list = list()
+            wrong_bit_list = list(range(ceil(H * k) + 1))
+            for wrong_bit in wrong_bit_list:
+                average_trading_price = 0
+                for l in range(average_coefficient):
+                    query = generate_query(k, M, m, v_star)  # generate the correct query
+                    if check_query_all_no(query):  # if query is full of "YES", flip the last point to "YES"
+                        query[-1] = 1
+                    wrong_query = generate_wrong_query(query, wrong_bit)  # generate wrong query
+                    corrected_query = correct_wrong_answer(wrong_query, H)  # correct the wrong query
+                    m_prime = get_m_prime_RLIS(corrected_query, m, k, H, r)
+                    trading_price = first_greater_element(data, m_prime)  # get the payoff
+                    average_trading_price = average_trading_price + trading_price  # sum the payoff for next step
+
+                average_trading_price = average_trading_price / average_coefficient  # calculate the average trading price
+                price_list.append(average_trading_price)
+                price_array = np.array(price_list)
+
+            sample_result.append(price_array)  # appen the payoff of this data sample to a list
+            wrong_bit_list_all.append(wrong_bit_list)  # append the number of wrong bit of this data sample to a list
+        sample_array = np.array(sample_result, dtype=object)
+        result_list.append(sample_array)  # append all payoffs to result_list
+    result_array = np.array(result_list)  # convert result_list to array
+
+    result = list(result_array.mean(axis=0))  # take average payoff from all data samples
+    average_pure_online = pure_online_sum / quantity_of_data  # take average payoff of pure online algorithm from all data samples
+    average_best_price = best_price_sum / quantity_of_data  # take average best price from all data samples
+    return result, wrong_bit_list_all, average_pure_online, average_best_price
+
+
+def RLIS_H(fileName, starting_days, whole_period, quantity_of_data, trading_period, H_list, eta_list, k,
+           average_coefficient):
+    pure_online_sum = 0
+    best_price_sum = 0
+    result_list = list()
+    for starting_day in starting_days:
+        data = load_data_set(fileName, starting_day, trading_period)
+        M, m = get_maxmin(fileName, starting_day, whole_period)
+        pure_online = online(data, M, m)  # the payoff of pure online algorithm
+        v_star = max(data)  # the best price
+        r = (M / m) ** (1 / k)  # calculate r
+        pure_online_sum += pure_online
+        best_price_sum += v_star
+
+        sample_result = list()
+        for eta in eta_list:
+            price_list = list()
+            for H in H_list:
+                payoff = 0
+                for t in range(average_coefficient):
+                    query = generate_query(k, M, m, v_star)
+                    if check_query_all_no(query):  # if query is full of "YES", flip the last point to "YES"
+                        query[-1] = 1
+                    wrong_bit = random.randint(ceil(eta * H), H)
+                    wrong_query = generate_wrong_query(query, wrong_bit)  # generate wrong query
+                    corrected_query = correct_wrong_answer(wrong_query, H)  # correct the wrong query
+                    m_prime = get_m_prime_RLIS_H(corrected_query, m, k, H, r)
+
+                    trading_price = first_greater_element(data, m_prime)
+                    payoff += trading_price
+
+                average_payoff = payoff / average_coefficient
+                price_list.append(average_payoff)
+                price_array = np.array(price_list)
+
+            sample_result.append(price_array)
+            sample_array = np.array(sample_result, dtype=object)
+
+        result_list.append(sample_array)
+        result_array = np.array(result_list)
+    result = list(result_array.mean(axis=0))
+    average_pure_online = pure_online_sum / quantity_of_data  # take average payoff of pure online algorithm from all data samples
+    average_best_price = best_price_sum / quantity_of_data  # take average best price from all data samples
+
+    return result, average_pure_online, average_best_price
+
+
+def plot_RLIS(result_list, eta_list_all, H_list, average_pure_online, average_best_price, save_path, x_label, y_label,
+              title):
     # plot the figure
     fig, ax = plt.subplots()
     for i in range(len(result_list)):
@@ -199,7 +335,7 @@ def plot(result_list, eta_list_all, H_list, average_pure_online, average_best_pr
     plt.show()
 
 
-def plot_second(result_list, eta_list, H_list, average_pure_online, average_best_price, save_path, x_label, y_label,
+def plot_RLIS_H(result_list, eta_list, H_list, average_pure_online, average_best_price, save_path, x_label, y_label,
                 title):
     fig, ax = plt.subplots()
     for i in range(len(result_list)):
@@ -214,7 +350,7 @@ def plot_second(result_list, eta_list, H_list, average_pure_online, average_best
     plt.show()
 
 
-def save_to_csv(payoff_list, eta_list, H_list, csv_path, pure_online, best_price):
+def save_to_csv_RLIS(payoff_list, eta_list, H_list, csv_path, pure_online, best_price):
     myDict = {}
     # save result to csv file
     for i in range(len(H_list)):
@@ -227,7 +363,7 @@ def save_to_csv(payoff_list, eta_list, H_list, csv_path, pure_online, best_price
     # print(df)
 
 
-def save_to_csv_second(payoff_list, eta_list, H_list, csv_path, pure_online, best_price):
+def save_to_csv_RLIS_H(payoff_list, eta_list, H_list, csv_path, pure_online, best_price):
     myDict = {"H": H_list}
     # save result to csv file
     for i in range(len(eta_list)):
@@ -249,157 +385,40 @@ def main():
     data_set = sys.argv[1]
 
     fileName = "data/" + data_set + ".csv"
-    save_path = "experiment_result/" + data_set + "/RLIS.png"  # path to save figures
-    csv_path = "experiment_result/" + data_set + "/RLIS.csv"  # path to save csv file
+
     whole_period = 200  # the whole period
     trading_period = 200  # the trading period
     quantity_of_data = 20  # the number of data sample
     k = 25  # The value of k in solution 1
+
+    starting_days = generate_uniform_data(fileName, 250, quantity_of_data)  # generate starting point uniformly
+
+    # RLIS
     average_coefficient = 100  # the coefficient determines how many time we generate wrong queries for each error
-
-    uniform_list = generate_uniform_data(fileName, 250, quantity_of_data)  # generate starting point uniformly
     H_list = [0.1, 0.2, 0.3, 0.4, 0.5]  # The value of H we want to test
-
-    result_list = list()
-    average_pure_online = 0  # initial the average payoff of pure online algorithm
-    average_best_price = 0  # initial the average best price
-
-    # We take average payoff in 20 data samples
-    for starting_day in uniform_list:
-        data = load_data_set(fileName, starting_day, trading_period)
-        M, m = get_maxmin(fileName, starting_day, whole_period)
-        pure_online = online(data, M, m)  # the payoff of pure online algorithm
-        v_star = max(data)  # the best price
-        r = (M / m) ** (1 / k)  # calculate r
-        average_pure_online += pure_online
-        average_best_price += v_star
-
-        sample_result = list()
-        wrong_bit_list_all = list()
-
-        for H in H_list:
-            wrong_bit_list = list(range(ceil(H * k) + 1))
-            price_list = list()
-            for wrong_bit in wrong_bit_list:
-                average_trading_price = 0
-                for l in range(average_coefficient):
-                    query = generate_query(k, M, m, v_star)  # generate the correct query
-                    if check_query_all_no(query):  # if query is full of "YES", flip the last point to "YES"
-                        query[-1] = 1
-                    wrong_query = generate_wrong_query(query, wrong_bit)  # generate wrong query
-                    corrected_query = correct_wrong_answer(wrong_query, H)  # correct the wrong query
-                    if check_query_all_no(corrected_query):
-                        m_prime = m
-
-                    else:
-                        i = find_first_yes(corrected_query)
-                        j = find_last_no(corrected_query)
-                        if i > j:
-                            i_prime = j  # calculate i_prime and j_prime
-                            j_prime = i
-                        else:
-                            alpha = count_alpha(corrected_query, i, j)
-                            p = ceil(k * H)
-                            i_prime = i - p + alpha
-                            j_prime = p + i + alpha - 1
-
-                            # if i_prime is out of range or j_prime is out of range
-                            if i_prime < 0:
-                                i_prime = 0
-                        m_prime = m * (r ** i_prime)
-
-                    trading_price = first_greater_element(data, m_prime)  # get the payoff
-                    average_trading_price = average_trading_price + trading_price  # sum the payoff for next step
-                average_trading_price = average_trading_price / average_coefficient  # calculate the average trading price
-                price_list.append(average_trading_price)
-                price_array = np.array(price_list)
-
-            wrong_bit_list_all.append(wrong_bit_list)  # append the number of wrong bit of this data sample to a list
-            sample_result.append(price_array)  # appen the payoff of this data sample to a list
-        sample_array = np.array(sample_result, dtype=object)
-
-        result_list.append(sample_array)  # append all payoffs to result_list
-    result_array = np.array(result_list)  # convert result_list to array
-
-    result = list(result_array.mean(axis=0))  # take average payoff from all data samples
-    average_pure_online = average_pure_online / quantity_of_data  # take average payoff of pure online algorithm from all data samples
-    average_best_price = average_best_price / quantity_of_data  # take average best price from all data samples
-
-    # draw
-    plot(result, wrong_bit_list_all, H_list, average_pure_online, average_best_price, save_path,
-         "error $\eta$",
-         "average profit", "RLIS")
+    result, wrong_bit_list_all, average_pure_online, average_best_price = RLIS(fileName, starting_days, whole_period,
+                                                                               quantity_of_data, trading_period, H_list,
+                                                                               k, average_coefficient)
+    save_path = "experiment_result/" + data_set + "/RLIS.png"  # path to save figures
+    csv_path = "experiment_result/" + data_set + "/RLIS.csv"  # path to save csv file
+    plot_RLIS(result, wrong_bit_list_all, H_list, average_pure_online, average_best_price, save_path,
+              "error $\eta$",
+              "average profit", "RLIS")
     # save result to csv file
-    save_to_csv(result, wrong_bit_list_all, H_list, csv_path, average_pure_online, average_best_price)
+    save_to_csv_RLIS(result, wrong_bit_list_all, H_list, csv_path, average_pure_online, average_best_price)
 
-    # The second figure: the x axis is H
-    result_list = list()
-    average_pure_online = 0  # initial the average payoff of pure online algorithm
-    average_best_price = 0  # initial the average best price
+    # RLIS-H
+    average_coefficient = 1000
     H_list = list(range(k + 1))
     eta_list = [0, 1 / 2, 2 / 3, 3 / 4]
-    for starting_day in uniform_list:
-        data = load_data_set(fileName, starting_day, trading_period)
-        M, m = get_maxmin(fileName, starting_day, whole_period)
-        pure_online = online(data, M, m)  # the payoff of pure online algorithm
-        v_star = max(data)  # the best price
-        r = (M / m) ** (1 / k)  # calculate r
-        average_pure_online += pure_online
-        average_best_price += v_star
-
-        sample_result = list()
-        for eta in eta_list:
-            price_list = list()
-            for H in H_list:
-                payoff = 0
-                for t in range(1000):
-                    query = generate_query(k, M, m, v_star)
-                    if check_query_all_no(query):  # if query is full of "YES", flip the last point to "YES"
-                        query[-1] = 1
-                    wrong_bit = random.randint(ceil(eta * H), H)
-                    wrong_query = generate_wrong_query(query, wrong_bit)  # generate wrong query
-                    corrected_query = correct_wrong_answer(wrong_query, H)  # correct the wrong query
-
-                    if check_query_all_no(corrected_query):
-                        m_prime = m
-                    else:
-                        i = find_first_yes(corrected_query)
-                        j = find_last_no(corrected_query)
-                        if j is None:
-                            i_prime = k
-                        else:
-                            if i > j:
-                                i_prime = j  # calculate i_prime and j_prime
-                            else:
-                                alpha = count_alpha(corrected_query, i, j)
-                                i_prime = i - H + alpha
-
-                            # if i_prime is out of range or j_prime is out of range
-                            if i_prime < 0:
-                                i_prime = 0
-                        m_prime = m * (r ** i_prime)
-
-                    trading_price = first_greater_element(data, m_prime)
-                    payoff += trading_price
-
-                average_payoff = payoff / 1000
-                price_list.append(average_payoff)
-                price_array = np.array(price_list)
-
-            sample_result.append(price_array)
-            sample_array = np.array(sample_result, dtype=object)
-
-        result_list.append(sample_array)
-        result_array = np.array(result_list)
-    result = list(result_array.mean(axis=0))
-    average_pure_online = average_pure_online / quantity_of_data  # take average payoff of pure online algorithm from all data samples
-    average_best_price = average_best_price / quantity_of_data  # take average best price from all data samples
-
+    result, average_pure_online, average_best_price = RLIS_H(fileName, starting_days, whole_period, quantity_of_data,
+                                                             trading_period, H_list, eta_list, k,
+                                                             average_coefficient)
     save_path = "experiment_result/" + data_set + "/RLIS-H.png"  # path to save figures
     csv_path = "experiment_result/" + data_set + "/RLIS-H.csv"  # path to save csv file
-    plot_second(result, eta_list, H_list, average_pure_online, average_best_price, save_path, "H", "average profit",
+    plot_RLIS_H(result, eta_list, H_list, average_pure_online, average_best_price, save_path, "H", "average profit",
                 "RLIS-H")
-    save_to_csv_second(result, eta_list, H_list, csv_path, average_pure_online, average_best_price)
+    save_to_csv_RLIS_H(result, eta_list, H_list, csv_path, average_pure_online, average_best_price)
 
 
 if __name__ == '__main__':
