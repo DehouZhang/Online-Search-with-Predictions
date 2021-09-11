@@ -3,11 +3,11 @@ Experiment: Predict about the best price
 Generate result and plot both H_Oblivious and H_Aware algorithms
 """
 
-from math import sqrt, log, ceil
+from math import sqrt, ceil
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-
+import sys
 
 def load_data_set(file_name, starting_day, period):
     # load data with specific starting date and length
@@ -128,9 +128,9 @@ def plot_h_aware(result_list, eta_list, H_list, average_pure_online, average_bes
     # plot the result of H_Aware algorithm
     fig, ax = plt.subplots()
     for i in range(len(result_list)):
-        ax.plot(eta_list, result_list[i], label='$H_n$=%0.3f, $H_p$=%0.3f' % (H_list[i][0], H_list[i][1]))
-    ax.axhline(average_pure_online, color='black', ls='dotted', label='Pure Online')
-    ax.axhline(average_best_price, color='red', ls='dotted', label='Best Price')
+        ax.plot(eta_list, result_list[i], label='H = %0.3f' % (H_list[i][0]))
+    ax.axhline(average_pure_online, color='black', ls='dotted', label='ON*')
+    ax.axhline(average_best_price, color='red', ls='dotted', label='M')
     ax.set_xlabel(x_label)
     ax.set_ylabel(y_label)
     ax.set_title(title)
@@ -143,9 +143,9 @@ def plot_h_oblivious(result, eta_list, r_list, pure_online, best_price, save_pat
     # plot the result of H_Oblivious algorithm
     fig, ax = plt.subplots()
     for i in range(len(result)):
-        ax.plot(eta_list, result[i], label='r=%0.2f' % (r_list[i]))
-    ax.axhline(pure_online, color='black', ls='dotted', label='Pure Online')
-    ax.axhline(best_price, color='red', ls='dotted', label='Best Price')
+        ax.plot(eta_list, result[i], label='r = %0.2f' % (r_list[i]))
+    ax.axhline(pure_online, color='black', ls='dotted', label='ON*')
+    ax.axhline(best_price, color='red', ls='dotted', label='M')
     ax.set_xlabel(x_label)
     ax.set_ylabel(y_label)
     ax.set_title(title)
@@ -306,12 +306,12 @@ def main():
     #data_set = "ETHUSD"
     #data_set = "BTCUSD"
     #data_set = "CADJPY"
-    data_set = "EURUSD"
+    #data_set = "EURUSD"
 
+    data_set = sys.argv[1]
     fileName = "data/" + data_set + ".csv"  # choose the dataset
     whole_period = 200  # set the whole period to 250 days
     trading_period = 200  # set the trading period to 200 days
-    eta_coefficient = 1000  # the coefficient determines how many data point for error
     quantity_of_data = 20
     fileName = "data/" + data_set + ".csv"  # choose the dataset
     starting_days = generate_uniform_data(fileName, 250, quantity_of_data)
@@ -329,26 +329,26 @@ def main():
 
     result, eta_list, average_pure_online, average_best_price = h_oblivious(fileName, starting_days, whole_period, trading_period, r_list, Hn_bound, Hp_bound, eta_number)
 
-    save_path_ho = "experiment_result/" + data_set + "/" + data_set + "_h_oblivious.png"  # the path to save the figure
+    save_path_ho = "experiment_result/" + data_set + "/ORA.png"  # the path to save the figure
     # plot the h_oblivious figure
     plot_h_oblivious(result, eta_list, r_list, average_pure_online, average_best_price, save_path=save_path_ho,
-                     x_label="error $\eta$", y_label="Payoff", title="H-Oblivious")
+                     x_label="error $\eta$", y_label="average profit", title="ORA")
     # the path to save the csv file
-    csv_path_ho = "experiment_result/" + data_set + "/" + data_set + "_h_oblivious.csv"
+    csv_path_ho = "experiment_result/" + data_set + "/ORA.csv"
     # save the result of h_oblivious algorithm to csv file
     save_to_csv_ho(result, eta_list, r_list, csv_path_ho, average_pure_online, average_best_price)
 
     eta_list_all, result, average_pure_online, average_best_price = h_aware(fileName, starting_days,
                                                                             whole_period, trading_period, Hn_Hp_list,Hn_bound,Hp_bound,
                                                                             eta_number)
-    save_path_ha = "experiment_result/" + data_set + "/" + data_set + "_h_aware.png"
+    save_path_ha = "experiment_result/" + data_set + "/Robust.png"
 
     # plot H_aware
     plot_h_aware(result, eta_list_all, Hn_Hp_list, average_pure_online, average_best_price, save_path_ha,
-                 "error $\eta$", "Average Payoff", "H-Aware")
+                 "error $\eta$", "average payoff", "Robust")
     # the path to save the result of h-aware
 
-    csv_path_ha = "experiment_result/" + data_set + "/" + data_set + "_h_aware.csv"
+    csv_path_ha = "experiment_result/" + data_set + "/Robust.csv"
 
     # save the result to csv file
     save_to_csv_ha(result, eta_list_all, Hn_Hp_list, csv_path_ha, average_pure_online, average_best_price)

@@ -8,6 +8,7 @@ import random
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
+import sys
 
 
 def load_data_set(file_name, starting_day, period):
@@ -188,8 +189,8 @@ def plot(result_list, eta_list_all, H_list, average_pure_online, average_best_pr
     fig, ax = plt.subplots()
     for i in range(len(result_list)):
         ax.plot(eta_list_all[i], result_list[i], label='H=%0.2f' % H_list[i])
-    ax.axhline(average_pure_online, color='black', ls='dotted', label='Pure Online')
-    ax.axhline(average_best_price, color='red', ls='dotted', label='Best Price')
+    ax.axhline(average_pure_online, color='black', ls='dotted', label='ON*')
+    ax.axhline(average_best_price, color='red', ls='dotted', label='M')
     ax.set_xlabel(x_label)
     ax.set_ylabel(y_label)
     ax.set_title(title)
@@ -203,8 +204,8 @@ def plot_second(result_list, eta_list, H_list, average_pure_online, average_best
     fig, ax = plt.subplots()
     for i in range(len(result_list)):
         ax.plot(H_list, result_list[i], label='$\eta$ = (%0.2fH, H)' % eta_list[i])
-    ax.axhline(average_pure_online, color='black', ls='dotted', label='Pure Online')
-    ax.axhline(average_best_price, color='red', ls='dotted', label='Best Price')
+    ax.axhline(average_pure_online, color='black', ls='dotted', label='ON*')
+    ax.axhline(average_best_price, color='red', ls='dotted', label='M')
     ax.set_xlabel(x_label)
     ax.set_ylabel(y_label)
     ax.set_title(title)
@@ -240,14 +241,16 @@ def save_to_csv_second(payoff_list, eta_list, H_list, csv_path, pure_online, bes
 
 def main():
     # choose dataset
-    #data_name = "ETHUSD"
-    #data_name = "BTCUSD"
-    data_name = "CADJPY"
-    #data_name = "EURUSD"
+    #data_set = "ETHUSD"
+    #data_set = "BTCUSD"
+    #data_set = "CADJPY"
+    data_set = "EURUSD"
 
-    fileName = "data/" + data_name + ".csv"
-    save_path = "experiment_result/" + data_name + "/" + data_name + "_solution1_eta_axis.png"  # path to save figures
-    csv_path = "experiment_result/" + data_name + "/" + data_name + "_solution1_eta_axis.csv"  # path to save csv file
+    #data_set = sys.argv[1]
+
+    fileName = "data/" + data_set + ".csv"
+    save_path = "experiment_result/" + data_set + "/RLIS.png"  # path to save figures
+    csv_path = "experiment_result/" + data_set + "/RLIS.csv"  # path to save csv file
     whole_period = 200  # the whole period
     trading_period = 200  # the trading period
     quantity_of_data = 20  # the number of data sample
@@ -324,8 +327,8 @@ def main():
 
     # draw
     plot(result, wrong_bit_list_all, H_list, average_pure_online, average_best_price, save_path,
-         "$\eta$",
-         "Average Payoff", "Solution 1")
+         "error $\eta$",
+         "average profit", "RLIS")
     # save result to csv file
     save_to_csv(result, wrong_bit_list_all, H_list, csv_path, average_pure_online, average_best_price)
 
@@ -392,10 +395,10 @@ def main():
     average_pure_online = average_pure_online / quantity_of_data  # take average payoff of pure online algorithm from all data samples
     average_best_price = average_best_price / quantity_of_data  # take average best price from all data samples
 
-    save_path = "experiment_result/" + data_name + "/" + data_name + "_solution1_H_axis.png"  # path to save figures
-    csv_path = "experiment_result/" + data_name + "/" + data_name + "_solution1_H_axis.csv"  # path to save csv file
-    plot_second(result, eta_list, H_list, average_pure_online, average_best_price, save_path, "H", "Average Payoff",
-                "Solution 1")
+    save_path = "experiment_result/" + data_set + "/RLIS-H.png"  # path to save figures
+    csv_path = "experiment_result/" + data_set + "/RLIS-H.csv"  # path to save csv file
+    plot_second(result, eta_list, H_list, average_pure_online, average_best_price, save_path, "H", "average profit",
+                "RLIS-H")
     save_to_csv_second(result, eta_list, H_list, csv_path, average_pure_online, average_best_price)
 
 if __name__ == '__main__':
