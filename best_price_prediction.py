@@ -1,6 +1,6 @@
 """
 Experiment: Predict about the best price
-Generate result and plot both H_Oblivious and H_Aware algorithms
+Generate result and plot both ORA and Robust algorithms
 """
 
 from math import sqrt, ceil

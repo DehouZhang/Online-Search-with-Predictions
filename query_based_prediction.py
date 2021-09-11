@@ -1,6 +1,6 @@
 """
-Experiment: Query model Solution 1
-Generate result and plot the Solution 1 algorithm
+Experiment: Query Based prediction
+Generate result and plot the RLIS and RLIS-H algorithm
 """
 
 from math import sqrt, ceil
