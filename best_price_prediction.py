@@ -314,7 +314,6 @@ def main():
     whole_period = 200  # set the whole period to 250 days
     trading_period = 200  # set the trading period to 200 days
     quantity_of_data = 20
-    fileName = "data/" + data_set + ".csv"  # choose the dataset
     starting_days = generate_uniform_data(fileName, 250, quantity_of_data)
     eta_number = 500
     if data_set == "ETHUSD" or data_set == "BTCUSD":
