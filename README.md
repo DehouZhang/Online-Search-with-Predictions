@@ -23,7 +23,7 @@ We included `ETHUSD`, `BTCUSD`, `CADJPY` and `EURUSD` as experment data in `Data
   1. run `python query_based_prediction.py ETHUSD`
   2. run `python best_price_prediction.py ETHUSD`
 
-* `Yen-to-CAD`
+* `CAD-to-Yen`
   1. run `python query_based_prediction.py CADJPY`
   2. run `python best_price_prediction.py CADJPY`
 
