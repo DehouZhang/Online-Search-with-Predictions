@@ -230,7 +230,7 @@ def save_to_csv_second(payoff_list, eta_list, H_list, csv_path, pure_online, bes
     myDict = {"H": H_list}
     # save result to csv file
     for i in range(len(eta_list)):
-        myDict["payoff('$\eta$ = (%0.2fH, H)')" % eta_list[i]] = payoff_list[i]
+        myDict["payoff(eta = (%0.2fH, H))" % eta_list[i]] = payoff_list[i]
     myDict["pure online"] = [pure_online] * len(H_list)
     myDict["best price"] = [best_price] * len(H_list)
     df = pd.DataFrame.from_dict(myDict, orient='index').transpose()
@@ -242,12 +242,12 @@ def main():
     # choose dataset
     #data_name = "ETHUSD"
     #data_name = "BTCUSD"
-    #data_name = "CADJPY"
+    data_name = "CADJPY"
     #data_name = "EURUSD"
 
     fileName = "data/" + data_name + ".csv"
     save_path = "experiment_result/" + data_name + "/" + data_name + "_solution1_eta_axis.png"  # path to save figures
-    csv_path = "experiment_result/" + data_name + "/" + data_name + "solution1_eta_axis.csv"  # path to save csv file
+    csv_path = "experiment_result/" + data_name + "/" + data_name + "_solution1_eta_axis.csv"  # path to save csv file
     whole_period = 200  # the whole period
     trading_period = 200  # the trading period
     quantity_of_data = 20  # the number of data sample
@@ -349,7 +349,7 @@ def main():
             price_list = list()
             for H in H_list:
                 payoff = 0
-                for t in range(500):
+                for t in range(1000):
                     query = generate_query(k, M, m, v_star)
                     if check_query_all_no(query):  # if query is full of "YES", flip the last point to "YES"
                         query[-1] = 1
@@ -379,7 +379,7 @@ def main():
                     trading_price = first_greater_element(data, m_prime)
                     payoff += trading_price
 
-                average_payoff = payoff / 500
+                average_payoff = payoff / 1000
                 price_list.append(average_payoff)
                 price_array = np.array(price_list)
 
