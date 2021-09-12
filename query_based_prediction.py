@@ -407,6 +407,7 @@ def main():
     # save result to csv file
     save_to_csv_RLIS(result, wrong_bit_list_all, H_list, csv_path, average_pure_online, average_best_price)
 
+    '''
     # RLIS-H
     average_coefficient = 1000
     H_list = list(range(k + 1))
@@ -419,7 +420,7 @@ def main():
     plot_RLIS_H(result, eta_list, H_list, average_pure_online, average_best_price, save_path, "H", "average profit",
                 "RLIS-H")
     save_to_csv_RLIS_H(result, eta_list, H_list, csv_path, average_pure_online, average_best_price)
-
+    '''
 
 if __name__ == '__main__':
     main()
