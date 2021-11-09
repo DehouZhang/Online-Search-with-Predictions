@@ -166,11 +166,9 @@ def save_to_csv_ho(result, eta_list, r_list, csv_path, pure_online, best_price):
     df.to_csv(csv_path)
 
 
-def save_to_csv_ho_count(result, eta_list, r_list, csv_path, pure_online, best_price):
+def save_to_csv_ho_count(result, eta_list, r_list, csv_path):
     # save the result of H_oblivious algorithm into csv file
-    length = len(eta_list)
-    myDict = {"eta": eta_list, "pure online": [pure_online] * length,
-              "best price": [best_price] * length}
+    myDict = {"eta": eta_list}
     for i in range(len(r_list)):
         myDict["count(r=%0.2f)" % r_list[i]] = result[i]
     df = pd.DataFrame.from_dict(myDict, orient='index').transpose()
@@ -187,11 +185,9 @@ def save_to_csv_ha(result, eta_list, H_list, csv_path, pure_online, best_price):
     df.to_csv(csv_path)
 
 
-def save_to_csv_ha_count(result, eta_list, H_list, csv_path, pure_online, best_price):
+def save_to_csv_ha_count(result, eta_list, H_list, csv_path):
     # save the result of H_oblivious algorithm into csv file
-    length = len(eta_list)
-    myDict = {"eta": eta_list, "pure online": [pure_online] * length,
-              "best price": [best_price] * length}
+    myDict = {"eta": eta_list}
     for i in range(len(H_list)):
         myDict["count(Hn=%0.3f, Hp=%0.3f)" % (H_list[i][0], H_list[i][1])] = result[i]
     df = pd.DataFrame.from_dict(myDict, orient='index').transpose()
@@ -253,7 +249,7 @@ def h_oblivious(fileName, starting_days, whole_period, trading_period, r_list, H
 
 
             for i in payoff_list:
-                if(i >= pure_online):
+                if(i + 0.00001 >= pure_online):
                     count_list.append(1)
                 else:
                     count_list.append(0)
@@ -368,12 +364,12 @@ def h_aware(fileName, starting_days, whole_period, trading_period, Hn_Hp_list, H
 
 
 def main():
-    # data_set = "ETHUSD"
-    data_set = "BTCUSD"
-    # data_set = "CADJPY"
-    # data_set = "EURUSD"
-    # data_set = "GBPUSD"
-    # data_set = "AUDCHF"
+    #data_set = "ETHUSD"
+    #data_set = "BTCUSD"
+    #data_set = "CADJPY"
+    #data_set = "EURUSD"
+    #data_set = "GBPUSD"
+    data_set = "AUDCHF"
 
     #data_set = sys.argv[1]
     fileName = "data/" + data_set + ".csv"  # choose the dataset
@@ -406,7 +402,7 @@ def main():
     csv_path_ho_count = "experiment_result/" + data_set + "/ORA_count.csv"
     # save the result of h_oblivious algorithm to csv file
     save_to_csv_ho(result, eta_list, r_list, csv_path_ho, average_pure_online, average_best_price)
-    save_to_csv_ho_count(result_count, eta_list, r_list, csv_path_ho_count, average_pure_online, average_best_price)
+    save_to_csv_ho_count(result_count, eta_list, r_list, csv_path_ho_count)
 
     eta_list_all, result, result_count, average_pure_online, average_best_price = h_aware(fileName, starting_days,
                                                                             whole_period, trading_period, Hn_Hp_list,
@@ -423,7 +419,7 @@ def main():
 
     # save the result to csv file
     save_to_csv_ha(result, eta_list_all, Hn_Hp_list, csv_path_ha, average_pure_online, average_best_price)
-    save_to_csv_ha_count(result_count, eta_list_all, Hn_Hp_list, csv_path_ha_count, average_pure_online, average_best_price)
+    save_to_csv_ha_count(result_count, eta_list_all, Hn_Hp_list, csv_path_ha_count)
 
 
 if __name__ == '__main__':

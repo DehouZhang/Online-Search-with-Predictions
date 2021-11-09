@@ -269,7 +269,7 @@ def RLIS(fileName, starting_days, whole_period, quantity_of_data, trading_period
 
                 average_trading_price = average_trading_price / average_coefficient  # calculate the average trading price
 
-                if (average_trading_price >= pure_online):
+                if (average_trading_price + 0.0000001 >= pure_online):
                     count += 1
                 price_list.append(average_trading_price)
                 price_array = np.array(price_list)
@@ -286,7 +286,7 @@ def RLIS(fileName, starting_days, whole_period, quantity_of_data, trading_period
         result_list_mean.append(sample_array)  # append all payoffs to result_list
         result_list_maxmin.append(sample_result)
 
-        sample_count = np.array(sample_count_array)
+        sample_count = np.array(sample_count_array, dtype=object)
         result_count.append(sample_count)
 
     result_array_maxmin = np.array(result_list_maxmin, dtype=object)  # convert result_list to array
@@ -373,10 +373,6 @@ def RLIS_H(fileName, starting_days, whole_period, quantity_of_data, trading_peri
     return result, average_pure_online, average_best_price
 
 
-def getArrayMax(array):
-    tolist = list(array)
-
-
 def plot_RLIS(result_list, eta_list_all, H_list, average_pure_online, average_best_price, save_path, x_label, y_label,
               title):
     # plot the figure
@@ -420,15 +416,12 @@ def save_to_csv_RLIS(payoff_list, eta_list, H_list, csv_path, pure_online, best_
     df.to_csv(csv_path)
 
 
-def save_to_csv_RLIS_count(payoff_list, count_list, eta_list, H_list, csv_path, pure_online, best_price):
+def save_to_csv_RLIS_count(count_list, eta_list, H_list, csv_path):
     myDict = {}
     # save result to csv file
     for i in range(len(H_list)):
         myDict["Number of wrong bit(H=%0.2f)" % H_list[i]] = eta_list[i]
-        myDict["payoff(H=%0.2f)" % H_list[i]] = payoff_list[i]
         myDict["count(H=%0.2f)" % H_list[i]] = count_list[i]
-    myDict["pure online"] = [pure_online] * len(eta_list[-1])
-    myDict["best price"] = [best_price] * len(eta_list[-1])
     df = pd.DataFrame.from_dict(myDict, orient='index').transpose()
     df.to_csv(csv_path)
 
@@ -447,12 +440,12 @@ def save_to_csv_RLIS_H(payoff_list, eta_list, H_list, csv_path, pure_online, bes
 
 def main():
     # choose dataset
-    # data_set = "ETHUSD"
-    data_set = "BTCUSD"
-    # data_set = "CADJPY"
-    # data_set = "EURUSD"
-    # data_set = "GBPUSD"
-    # data_set = "AUDCHF"
+    #data_set = "ETHUSD"
+    #data_set = "BTCUSD"
+    #data_set = "CADJPY"
+    #data_set = "EURUSD"
+    #data_set = "GBPUSD"
+    data_set = "AUDCHF"
 
     # data_set = sys.argv[1]
 
@@ -480,7 +473,7 @@ def main():
     save_to_csv_RLIS(result, wrong_bit_list_all, H_list, csv_path, average_pure_online, average_best_price)
 
     csv_path_count = "experiment_result/" + data_set + "/RLIS_count.csv"
-    save_to_csv_RLIS_count(result, result_count, wrong_bit_list_all, H_list, csv_path_count, average_pure_online, average_best_price)
+    save_to_csv_RLIS_count(result_count, wrong_bit_list_all, H_list, csv_path_count)
 
     '''
     # RLIS-H
