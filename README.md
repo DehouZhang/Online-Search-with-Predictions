@@ -6,7 +6,7 @@ We implement `ORA`, `Robust`, `RLIS` and `RIS` algorithms.
 ## Experiment Data
 The experiment data can be download from https://eatradingacademy.com/software/forex-historical-data/.
 
-We included `ETHUSD`, `BTCUSD`, `CADJPY` and `EURUSD` as experment data in `Data` folder.
+We included `ETHUSD`, `BTCUSD`, `CADJPY`, `EURUSD`,`GBPUSD` and `AUDCHF` as experment data in `Data` folder.
 
 ## Prerequisites
 * Python 3.8 
