@@ -1,6 +1,6 @@
 """
 Experiment: Predict about the best price
-Generate result and plot both ORA and Robust algorithms
+Generate result and plot both ORA and Robust algorithms AND ORA_count
 """
 
 from math import sqrt, ceil
@@ -155,6 +155,19 @@ def plot_h_oblivious(result, eta_list, r_list, pure_online, best_price, save_pat
     plt.show()
 
 
+def plot_h_oblivious_count(result, eta_list, r_list, save_path, x_label, y_label, title):
+    # plot the result of H_Oblivious_count
+    fig, ax = plt.subplots()
+    for i in range(len(result)):
+        ax.plot(eta_list, result[i], label='r = %0.2f' % (r_list[i]))
+    ax.set_xlabel(x_label)
+    ax.set_ylabel(y_label)
+    ax.set_title(title)
+    plt.legend()
+    fig.savefig(save_path)
+    plt.show()
+
+
 def save_to_csv_ho(result, eta_list, r_list, csv_path, pure_online, best_price):
     # save the result of H_oblivious algorithm into csv file
     length = len(eta_list)
@@ -194,8 +207,6 @@ def save_to_csv_ha_count(result, eta_list, H_list, csv_path):
     df.to_csv(csv_path)
 
 
-
-
 def get_sample_hn_hp_bound(m, M):
     Hn_bound = (M - m) / M  # the upper-bound of the value of negative error
     Hp_bound = (M - m) / m  # the upper-bound of the value of positive error
@@ -214,9 +225,6 @@ def check_data_sample_range(fileName, starting_days, whole_period, Hn_bound, Hp_
 
 def h_oblivious(fileName, starting_days, whole_period, trading_period, r_list, Hn_bound, Hp_bound, eta_number):
     result_list = list()
-    #valid_starting_days = check_data_sample_range(fileName, starting_days, whole_period, Hn_bound, Hp_bound)
-    #quantity_of_data = len(valid_starting_days)
-
     quantity_of_data = len(starting_days)
     print(quantity_of_data)
     pure_online_sum = 0
@@ -248,10 +256,8 @@ def h_oblivious(fileName, starting_days, whole_period, trading_period, r_list, H
                 payoff_list_p.append(h_oblivious_positive(data, v_star, eta_p, r))
 
             payoff_list = payoff_list_n[::-1] + payoff_list_p
-
-
             for i in payoff_list:
-                if(i + 0.00001 >= pure_online):
+                if i + 0.00001 >= pure_online:
                     count_list.append(1)
                 else:
                     count_list.append(0)
@@ -325,18 +331,17 @@ def h_aware(fileName, starting_days, whole_period, trading_period, Hn_Hp_list, H
             payoff_list = payoff_list_n[::-1] + payoff_list_p
 
             for i in payoff_list:
-                if(i >= pure_online):
+                if (i >= pure_online):
                     count_list.append(1)
                 else:
                     count_list.append(0)
 
-            # payoff_list = [None] * left_bound + payoff_list +[None] * (len(eta_list_n_all)+len(eta_list_p_all) - right_bound -1)
             payoff_array = np.array(payoff_list)
             sample_result.append(payoff_array)
             sample_array = np.array(sample_result, dtype=object)
 
             sample_count.append(np.array(count_list))
-            count_array = np.array(sample_count,dtype=object)
+            count_array = np.array(sample_count, dtype=object)
 
         result_list.append(sample_array)
         result_array = np.array(result_list)
@@ -362,16 +367,16 @@ def h_aware(fileName, starting_days, whole_period, trading_period, Hn_Hp_list, H
 
     average_pure_online = pure_online_sum / quantity_of_data  # calculate the average payoff of pure online for all data samples
     average_best_price = best_price_sum / quantity_of_data  # calculte the average best price for all data samples
-    return eta_list, result,result_count_list, average_pure_online, average_best_price
+    return eta_list, result, result_count_list, average_pure_online, average_best_price
 
 
 def main():
-    #data_set = "ETHUSD"
-    #data_set = "BTCUSD"
-    #data_set = "CADJPY"
-    #data_set = "EURUSD"
-    #data_set = "GBPUSD"
-    #data_set = "AUDCHF"
+    # data_set = "ETHUSD"
+    # data_set = "BTCUSD"
+    # data_set = "CADJPY"
+    # data_set = "EURUSD"
+    # data_set = "GBPUSD"
+    # data_set = "AUDCHF"
 
     data_set = sys.argv[1]
     fileName = "data/" + data_set + ".csv"  # choose the dataset
@@ -391,14 +396,20 @@ def main():
         Hn_bound = 0.04
         Hn_Hp_list = [(0.005, 0.005), (0.01, 0.01), (0.02, 0.02), (0.03, 0.03), (0.04, 0.04)]
 
-    result, result_count, eta_list, average_pure_online, average_best_price = h_oblivious(fileName, starting_days, whole_period,
-                                                                            trading_period, r_list, Hn_bound, Hp_bound,
-                                                                            eta_number)
+    result, result_count, eta_list, average_pure_online, average_best_price = h_oblivious(fileName, starting_days,
+                                                                                          whole_period,
+                                                                                          trading_period, r_list,
+                                                                                          Hn_bound, Hp_bound,
+                                                                                          eta_number)
 
     save_path_ho = "experiment_result/" + data_set + "/ORA.png"  # the path to save the figure
+    save_path_ho_count = "experiment_result/" + data_set + "/ORA_count.png"
     # plot the h_oblivious figure
     plot_h_oblivious(result, eta_list, r_list, average_pure_online, average_best_price, save_path=save_path_ho,
                      x_label="error $\eta$", y_label="average profit", title="ORA")
+    plot_h_oblivious_count(result_count, eta_list, r_list, save_path=save_path_ho_count,
+                           x_label="error $\eta$", y_label="number of samples better than ON*", title="ORA_count")
+
     # the path to save the csv file
     csv_path_ho = "experiment_result/" + data_set + "/ORA.csv"
     csv_path_ho_count = "experiment_result/" + data_set + "/ORA_count.csv"
@@ -407,9 +418,10 @@ def main():
     save_to_csv_ho_count(result_count, eta_list, r_list, csv_path_ho_count)
 
     eta_list_all, result, result_count, average_pure_online, average_best_price = h_aware(fileName, starting_days,
-                                                                            whole_period, trading_period, Hn_Hp_list,
-                                                                            Hn_bound, Hp_bound,
-                                                                            eta_number)
+                                                                                          whole_period, trading_period,
+                                                                                          Hn_Hp_list,
+                                                                                          Hn_bound, Hp_bound,
+                                                                                          eta_number)
     save_path_ha = "experiment_result/" + data_set + "/Robust.png"
     # plot H_aware
     plot_h_aware(result, eta_list_all, Hn_Hp_list, average_pure_online, average_best_price, save_path_ha,

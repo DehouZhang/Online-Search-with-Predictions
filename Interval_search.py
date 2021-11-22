@@ -1,6 +1,6 @@
 """
 Experiment: Query Based prediction
-Generate result and plot the RLIS and RLIS-H algorithm
+Generate result and plot the RIS algorithm
 """
 
 from math import sqrt, ceil
@@ -287,14 +287,12 @@ def RIS(fileName, starting_days, whole_period, quantity_of_data, trading_period,
         sample_result_array = list()
 
         best_difference = p_large - p_small
-        #print("best_price_differnece = ",best_difference)
         sum_best_difference += best_difference
         for H in H_list:
             price_list = list()
             eta_list = list(range(ceil(H * n) + 1))  # generate list of value of eta
             for eta in eta_list:
                 sum_price_difference = 0
-                #valid_data = average_coefficient
                 for l in range(average_coefficient):
                     query_large = generate_query(n_large, M, m, p_large)  # generate the correct query
                     query_small = generate_query(n_small, M, m, p_small)
@@ -308,19 +306,13 @@ def RIS(fileName, starting_days, whole_period, quantity_of_data, trading_period,
                     corrected_query_small = correct_wrong_answer(wrong_query_small, H)
                     lowerbound_large = get_lowerbound_large(corrected_query_large, m, n_large, ceil(H * n), r_large)
                     upperbound_small = get_upperbound_small(corrected_query_small, m, M, n_small, ceil(H * n), r_small)
-                    #print(lowerbound_large - upperbound_small)
-                    #M_prime_small = get_m_prime(corrected_query_small, m, n, H, r)
 
                     trading_price_large, trading_price_small = first_greater_and_smaller_element(data, lowerbound_large, upperbound_small)
                     price_difference = trading_price_large - trading_price_small
                     if price_difference < 0:
                         price_difference = 0
-                        #valid_data = valid_data - 1
 
-                    #print(price_difference)
                     sum_price_difference += price_difference  # sum the payoff for next step
-                #if valid_data ==0:
-                    #valid_data = 1
                 average_price_difference = sum_price_difference / average_coefficient  # calculate the average trading price
                 price_list.append(average_price_difference)
                 price_array = np.array(price_list)
@@ -367,27 +359,23 @@ def save_to_csv_RIS(payoff_list, eta_list, H_list, csv_path, best_price_differen
 def main():
     # choose dataset
     #data_set = "ETHUSD"
-    # data_set = "BTCUSD"
+    #data_set = "BTCUSD"
     #data_set = "CADJPY"
     #data_set = "EURUSD"
     #data_set = "GBPUSD"
     #data_set = "AUDCHF"
 
     data_set = sys.argv[1]
-
     fileName = "data/" + data_set + ".csv"
-
     whole_period = 200  # the whole period
     trading_period = 200  # the trading period
     quantity_of_data = 20  # the number of data sample
     k = 25  # The value of k in solution 1
-
     starting_days = generate_uniform_data(fileName, 250, quantity_of_data)  # generate starting point uniformly
 
-    # RLIS
+    # RIS
     average_coefficient = 1000  # the coefficient determines how many time we generate wrong queries for each error
     H_list = [0.1, 0.2, 0.3, 0.4, 0.5]  # The value of H we want to test
-    #H_list = [0.1]
     result, wrong_bit_list_all, average_best_difference = RIS(fileName, starting_days, whole_period, quantity_of_data, trading_period, H_list, k,
                                      average_coefficient)
     print(result)
@@ -397,21 +385,6 @@ def main():
     plot_RIS(result, wrong_bit_list_all, H_list, average_best_difference, save_path, "error $\eta$", "average price difference", "RIS")
     # save result to csv file
     save_to_csv_RIS(result, wrong_bit_list_all, H_list, csv_path, average_best_difference)
-
-    '''
-    # RLIS-H
-    average_coefficient = 1000
-    H_list = list(range(k + 1))
-    eta_list = [0, 1 / 2, 2 / 3, 3 / 4]
-    result, average_pure_online, average_best_price = RLIS_H(fileName, starting_days, whole_period, quantity_of_data,
-                                                             trading_period, H_list, eta_list, k,
-                                                             average_coefficient)
-    save_path = "experiment_result/" + data_set + "/RLIS-H.png"  # path to save figures
-    csv_path = "experiment_result/" + data_set + "/RLIS-H.csv"  # path to save csv file
-    plot_RLIS_H(result, eta_list, H_list, average_pure_online, average_best_price, save_path, "H", "average profit",
-                "RLIS-H")
-    save_to_csv_RLIS_H(result, eta_list, H_list, csv_path, average_pure_online, average_best_price)
-    '''
 
 
 if __name__ == '__main__':

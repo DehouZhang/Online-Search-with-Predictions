@@ -1,6 +1,6 @@
 """
 Experiment: Query Based prediction
-Generate result and plot the RLIS and RLIS-H algorithm
+Generate result and plot the RLIS algorithm and RLIS_count
 """
 
 from math import sqrt, ceil
@@ -203,32 +203,9 @@ def get_m_prime_RLIS(corrected_query, m, k, H, r):
     return m_prime
 
 
-def get_m_prime_RLIS_H(corrected_query, m, k, H, r):
-    if check_query_all_no(corrected_query):
-        m_prime = m
-    else:
-        i = find_first_yes(corrected_query)
-        j = find_last_no(corrected_query)
-        if j is None:
-            i_prime = k
-        else:
-            if i > j:
-                i_prime = j  # calculate i_prime and j_prime
-            else:
-                alpha = count_alpha(corrected_query, i, j)
-                i_prime = i - H + alpha
-
-            # if i_prime is out of range or j_prime is out of range
-            if i_prime < 0:
-                i_prime = 0
-        m_prime = m * (r ** i_prime)
-    return m_prime
-
-
 def RLIS(fileName, starting_days, whole_period, quantity_of_data, trading_period, H_list, k, average_coefficient):
     pure_online_sum = 0
     best_price_sum = 0
-    result_list_maxmin = list()
     result_list_mean = list()
     pure_online_list = list()
 
@@ -247,7 +224,6 @@ def RLIS(fileName, starting_days, whole_period, quantity_of_data, trading_period
         pure_online_sum += pure_online
         best_price_sum += v_star
         wrong_bit_list_all = list()
-        sample_result = list()
         sample_result_array = list()
         sample_count_array = list()
         for H in H_list:
@@ -269,7 +245,7 @@ def RLIS(fileName, starting_days, whole_period, quantity_of_data, trading_period
 
                 average_trading_price = average_trading_price / average_coefficient  # calculate the average trading price
 
-                if (average_trading_price + 0.0000001 >= pure_online):
+                if average_trading_price + 0.0000001 >= pure_online:
                     count += 1
                 price_list.append(average_trading_price)
                 price_array = np.array(price_list)
@@ -277,100 +253,22 @@ def RLIS(fileName, starting_days, whole_period, quantity_of_data, trading_period
                 count_array = np.array(count_list)
 
             sample_result_array.append(price_array)  # appen the payoff of this data sample to a list
-            sample_result.append(price_list)
-
             sample_count_array.append(count_array)
             wrong_bit_list_all.append(wrong_bit_list)  # append the number of wrong bit of this data sample to a list
 
         sample_array = np.array(sample_result_array, dtype=object)
         result_list_mean.append(sample_array)  # append all payoffs to result_list
-        result_list_maxmin.append(sample_result)
-
         sample_count = np.array(sample_count_array, dtype=object)
         result_count.append(sample_count)
 
-    result_array_maxmin = np.array(result_list_maxmin, dtype=object)  # convert result_list to array
     result_array_mean = np.array(result_list_mean)
-
     count_array = np.array(result_count, dtype=object)
     result_count_list = list(count_array.sum(axis=0))
-    print(result_count_list)
-
     result_mean = list(result_array_mean.mean(axis=0))  # take average payoff from all data samples
-    result_max = list(result_array_maxmin.max(axis=0))
-    result_min = list(result_array_maxmin.min(axis=0))
-
-    print("Max_value:")
-    print(result_max)
-    print("ON*:", max(pure_online_list))
-    print("M:", max(best_price_list))
-
-    print("Min_value:")
-    print(result_min)
-    print("ON*:", min(pure_online_list))
-    print("M:", min(best_price_list))
 
     average_pure_online = pure_online_sum / quantity_of_data  # take average payoff of pure online algorithm from all data samples
     average_best_price = best_price_sum / quantity_of_data  # take average best price from all data samples
     return result_mean, result_count_list, wrong_bit_list_all, average_pure_online, average_best_price
-
-
-def RLIS_H(fileName, starting_days, whole_period, quantity_of_data, trading_period, H_list, eta_list, k,
-           average_coefficient):
-    pure_online_sum = 0
-    best_price_sum = 0
-    result_list = list()
-    result_count = list()
-    for starting_day in starting_days:
-        data = load_data_set(fileName, starting_day, trading_period)
-        M, m = get_maxmin(fileName, starting_day, whole_period)
-        pure_online = online(data, M, m)  # the payoff of pure online algorithm
-        v_star = max(data)  # the best price
-        r = (M / m) ** (1 / k)  # calculate r
-        pure_online_sum += pure_online
-        best_price_sum += v_star
-
-        sample_result = list()
-        sample_count = list()
-
-        for eta in eta_list:
-            price_list = list()
-            count_list = list()
-            for H in H_list:
-                payoff = 0
-                count = 0
-                for t in range(average_coefficient):
-                    query = generate_query(k, M, m, v_star)
-                    if check_query_all_no(query):  # if query is full of "YES", flip the last point to "YES"
-                        query[-1] = 1
-                    wrong_bit = random.randint(ceil(eta * H), H)
-                    wrong_query = generate_wrong_query(query, wrong_bit)  # generate wrong query
-                    corrected_query = correct_wrong_answer(wrong_query, H)  # correct the wrong query
-                    m_prime = get_m_prime_RLIS_H(corrected_query, m, k, H, r)
-
-                    trading_price = first_greater_element(data, m_prime)
-                    payoff += trading_price
-
-                average_payoff = payoff / average_coefficient
-
-                if (average_payoff >= pure_online):
-                    count += 1
-
-                price_list.append(average_payoff)
-                price_array = np.array(price_list)
-
-            sample_result.append(price_array)
-            sample_array = np.array(sample_result, dtype=object)
-            count_list.append(count)
-        result_list.append(sample_array)
-        result_array = np.array(result_list)
-        result_count.append(count_list)
-    # print(result_count)
-    result = list(result_array.mean(axis=0))
-    average_pure_online = pure_online_sum / quantity_of_data  # take average payoff of pure online algorithm from all data samples
-    average_best_price = best_price_sum / quantity_of_data  # take average best price from all data samples
-
-    return result, average_pure_online, average_best_price
 
 
 def plot_RLIS(result_list, eta_list_all, H_list, average_pure_online, average_best_price, save_path, x_label, y_label,
@@ -389,13 +287,12 @@ def plot_RLIS(result_list, eta_list_all, H_list, average_pure_online, average_be
     plt.show()
 
 
-def plot_RLIS_H(result_list, eta_list, H_list, average_pure_online, average_best_price, save_path, x_label, y_label,
-                title):
+def plot_RLIS_count(result_list, eta_list_all, H_list, save_path, x_label, y_label,
+              title):
+    # plot the figure
     fig, ax = plt.subplots()
     for i in range(len(result_list)):
-        ax.plot(H_list, result_list[i], label='$\eta$ = (%0.2fH, H)' % eta_list[i])
-    ax.axhline(average_pure_online, color='black', ls='dotted', label='ON*')
-    ax.axhline(average_best_price, color='red', ls='dotted', label='M')
+        ax.plot(eta_list_all[i], result_list[i], label='H=%0.2f' % H_list[i])
     ax.set_xlabel(x_label)
     ax.set_ylabel(y_label)
     ax.set_title(title)
@@ -424,18 +321,6 @@ def save_to_csv_RLIS_count(count_list, eta_list, H_list, csv_path):
         myDict["count(H=%0.2f)" % H_list[i]] = count_list[i]
     df = pd.DataFrame.from_dict(myDict, orient='index').transpose()
     df.to_csv(csv_path)
-
-
-def save_to_csv_RLIS_H(payoff_list, eta_list, H_list, csv_path, pure_online, best_price):
-    myDict = {"H": H_list}
-    # save result to csv file
-    for i in range(len(eta_list)):
-        myDict["payoff(eta = (%0.2fH, H))" % eta_list[i]] = payoff_list[i]
-    myDict["pure online"] = [pure_online] * len(H_list)
-    myDict["best price"] = [best_price] * len(H_list)
-    df = pd.DataFrame.from_dict(myDict, orient='index').transpose()
-    df.to_csv(csv_path)
-    # print(df)
 
 
 def main():
@@ -472,23 +357,12 @@ def main():
     # save result to csv file
     save_to_csv_RLIS(result, wrong_bit_list_all, H_list, csv_path, average_pure_online, average_best_price)
 
+    save_path_count = "experiment_result/" + data_set + "/RLIS_count.png"
     csv_path_count = "experiment_result/" + data_set + "/RLIS_count.csv"
+    plot_RLIS_count(result_count, wrong_bit_list_all, H_list, save_path_count,
+              "error $\eta$",
+              "number of samples better than ON*", "RLIS")
     save_to_csv_RLIS_count(result_count, wrong_bit_list_all, H_list, csv_path_count)
-
-    '''
-    # RLIS-H
-    average_coefficient = 1000
-    H_list = list(range(k + 1))
-    eta_list = [0, 1 / 2, 2 / 3, 3 / 4]
-    result, average_pure_online, average_best_price = RLIS_H(fileName, starting_days, whole_period, quantity_of_data,
-                                                             trading_period, H_list, eta_list, k,
-                                                             average_coefficient)
-    save_path = "experiment_result/" + data_set + "/RLIS-H.png"  # path to save figures
-    csv_path = "experiment_result/" + data_set + "/RLIS-H.csv"  # path to save csv file
-    plot_RLIS_H(result, eta_list, H_list, average_pure_online, average_best_price, save_path, "H", "average profit",
-                "RLIS-H")
-    save_to_csv_RLIS_H(result, eta_list, H_list, csv_path, average_pure_online, average_best_price)
-    '''
 
 
 if __name__ == '__main__':
