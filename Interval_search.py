@@ -229,7 +229,7 @@ def check_query_all_yes(query):
 
 def get_lowerbound_large(corrected_query, m, n, p, r):
     if check_query_all_no(corrected_query):
-        m_prime = m * (r ** (n-1))
+        m_prime = m * (r ** (len(corrected_query)-p+1))
     elif check_query_all_yes(corrected_query):
         m_prime = m
     else:
@@ -344,37 +344,36 @@ def plot_RIS(result_list, eta_list_all, H_list, average_price_difference, save_p
     fig, ax = plt.subplots()
     for i in range(len(result_list)):
         ax.plot(eta_list_all[i], result_list[i], label='H=%0.2f' % H_list[i])
-    ax.axhline(average_price_difference, color='red', ls='dotted', label='M-m')
+    ax.axhline(average_price_difference, color='red', ls='dotted', label='best_price_difference')
     ax.set_xlabel(x_label)
     ax.set_ylabel(y_label)
     ax.set_title(title)
     plt.legend()
-    #fig.savefig(save_path)
+    fig.savefig(save_path)
     plt.show()
 
 
-def save_to_csv_RLIS(payoff_list, eta_list, H_list, csv_path, pure_online, best_price):
+def save_to_csv_RIS(payoff_list, eta_list, H_list, csv_path, best_price_difference):
     myDict = {}
     # save result to csv file
     for i in range(len(H_list)):
         myDict["Number of wrong bit(H=%0.2f)" % H_list[i]] = eta_list[i]
         myDict["payoff(H=%0.2f)" % H_list[i]] = payoff_list[i]
-    myDict["pure online"] = [pure_online] * len(eta_list[-1])
-    myDict["best price"] = [best_price] * len(eta_list[-1])
+    myDict["best price difference"] = [best_price_difference] * len(eta_list[-1])
     df = pd.DataFrame.from_dict(myDict, orient='index').transpose()
     df.to_csv(csv_path)
 
 
 def main():
     # choose dataset
-    # data_set = "ETHUSD"
+    #data_set = "ETHUSD"
     # data_set = "BTCUSD"
-    data_set = "CADJPY"
-    # data_set = "EURUSD"
-    # data_set = "GBPUSD"
-    # data_set = "AUDCHF"
+    #data_set = "CADJPY"
+    #data_set = "EURUSD"
+    #data_set = "GBPUSD"
+    #data_set = "AUDCHF"
 
-    # data_set = sys.argv[1]
+    data_set = sys.argv[1]
 
     fileName = "data/" + data_set + ".csv"
 
@@ -386,18 +385,18 @@ def main():
     starting_days = generate_uniform_data(fileName, 250, quantity_of_data)  # generate starting point uniformly
 
     # RLIS
-    average_coefficient = 100  # the coefficient determines how many time we generate wrong queries for each error
+    average_coefficient = 1000  # the coefficient determines how many time we generate wrong queries for each error
     H_list = [0.1, 0.2, 0.3, 0.4, 0.5]  # The value of H we want to test
     #H_list = [0.1]
     result, wrong_bit_list_all, average_best_difference = RIS(fileName, starting_days, whole_period, quantity_of_data, trading_period, H_list, k,
                                      average_coefficient)
     print(result)
     print(average_best_difference)
-    save_path = "experiment_result/" + data_set + "/RLIS.png"  # path to save figures
-    csv_path = "experiment_result/" + data_set + "/RLIS.csv"  # path to save csv file
+    save_path = "experiment_result/" + data_set + "/RIS.png"  # path to save figures
+    csv_path = "experiment_result/" + data_set + "/RIS.csv"  # path to save csv file
     plot_RIS(result, wrong_bit_list_all, H_list, average_best_difference, save_path, "error $\eta$", "average price difference", "RIS")
     # save result to csv file
-    # save_to_csv_RLIS(result, wrong_bit_list_all, H_list, csv_path, average_pure_online, average_best_price)
+    save_to_csv_RIS(result, wrong_bit_list_all, H_list, csv_path, average_best_difference)
 
     '''
     # RLIS-H

@@ -185,7 +185,7 @@ def check_query_all_no(query):
 
 def get_m_prime_RLIS(corrected_query, m, k, H, r):
     if check_query_all_no(corrected_query):
-        m_prime = m
+        m_prime = m * (r ** (len(corrected_query)-k+1))
     else:
         i = find_first_yes(corrected_query)
         j = find_last_no(corrected_query)
@@ -445,9 +445,9 @@ def main():
     #data_set = "CADJPY"
     #data_set = "EURUSD"
     #data_set = "GBPUSD"
-    data_set = "AUDCHF"
+    #data_set = "AUDCHF"
 
-    # data_set = sys.argv[1]
+    data_set = sys.argv[1]
 
     fileName = "data/" + data_set + ".csv"
 

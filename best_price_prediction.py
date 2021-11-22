@@ -214,9 +214,11 @@ def check_data_sample_range(fileName, starting_days, whole_period, Hn_bound, Hp_
 
 def h_oblivious(fileName, starting_days, whole_period, trading_period, r_list, Hn_bound, Hp_bound, eta_number):
     result_list = list()
-    valid_starting_days = check_data_sample_range(fileName, starting_days, whole_period, Hn_bound, Hp_bound)
-    quantity_of_data = len(valid_starting_days)
+    #valid_starting_days = check_data_sample_range(fileName, starting_days, whole_period, Hn_bound, Hp_bound)
+    #quantity_of_data = len(valid_starting_days)
 
+    quantity_of_data = len(starting_days)
+    print(quantity_of_data)
     pure_online_sum = 0
     best_price_sum = 0
 
@@ -224,7 +226,7 @@ def h_oblivious(fileName, starting_days, whole_period, trading_period, r_list, H
     eta_list_p = np.linspace(0, Hp_bound, eta_number).tolist()
 
     result_count = list()
-    for starting_day in valid_starting_days:
+    for starting_day in starting_days:
         data = load_data_set(fileName, starting_day, trading_period)
         M, m = get_maxmin(fileName, starting_day, whole_period)
         pure_online = online(data, M, m)
@@ -369,9 +371,9 @@ def main():
     #data_set = "CADJPY"
     #data_set = "EURUSD"
     #data_set = "GBPUSD"
-    data_set = "AUDCHF"
+    #data_set = "AUDCHF"
 
-    #data_set = sys.argv[1]
+    data_set = sys.argv[1]
     fileName = "data/" + data_set + ".csv"  # choose the dataset
     whole_period = 200  # set the whole period to 250 days
     trading_period = 200  # set the trading period to 200 days
