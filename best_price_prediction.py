@@ -198,15 +198,6 @@ def save_to_csv_ha(result, eta_list, H_list, csv_path, pure_online, best_price):
     df.to_csv(csv_path)
 
 
-def save_to_csv_ha_count(result, eta_list, H_list, csv_path):
-    # save the result of H_oblivious algorithm into csv file
-    myDict = {"eta": eta_list}
-    for i in range(len(H_list)):
-        myDict["count(Hn=%0.3f, Hp=%0.3f)" % (H_list[i][0], H_list[i][1])] = result[i]
-    df = pd.DataFrame.from_dict(myDict, orient='index').transpose()
-    df.to_csv(csv_path)
-
-
 def get_sample_hn_hp_bound(m, M):
     Hn_bound = (M - m) / M  # the upper-bound of the value of negative error
     Hp_bound = (M - m) / m  # the upper-bound of the value of positive error
@@ -226,7 +217,6 @@ def check_data_sample_range(fileName, starting_days, whole_period, Hn_bound, Hp_
 def h_oblivious(fileName, starting_days, whole_period, trading_period, r_list, Hn_bound, Hp_bound, eta_number):
     result_list = list()
     quantity_of_data = len(starting_days)
-    print(quantity_of_data)
     pure_online_sum = 0
     best_price_sum = 0
 
@@ -379,6 +369,7 @@ def main():
     # data_set = "AUDCHF"
 
     data_set = sys.argv[1]
+
     fileName = "data/" + data_set + ".csv"  # choose the dataset
     whole_period = 200  # set the whole period to 250 days
     trading_period = 200  # set the trading period to 200 days
@@ -429,11 +420,8 @@ def main():
     # the path to save the result of h-aware
 
     csv_path_ha = "experiment_result/" + data_set + "/Robust.csv"
-    csv_path_ha_count = "experiment_result/" + data_set + "/Robust_count.csv"
-
     # save the result to csv file
     save_to_csv_ha(result, eta_list_all, Hn_Hp_list, csv_path_ha, average_pure_online, average_best_price)
-    save_to_csv_ha_count(result_count, eta_list_all, Hn_Hp_list, csv_path_ha_count)
 
 
 if __name__ == '__main__':

@@ -366,6 +366,7 @@ def main():
     #data_set = "AUDCHF"
 
     data_set = sys.argv[1]
+
     fileName = "data/" + data_set + ".csv"
     whole_period = 200  # the whole period
     trading_period = 200  # the trading period
@@ -378,8 +379,6 @@ def main():
     H_list = [0.1, 0.2, 0.3, 0.4, 0.5]  # The value of H we want to test
     result, wrong_bit_list_all, average_best_difference = RIS(fileName, starting_days, whole_period, quantity_of_data, trading_period, H_list, k,
                                      average_coefficient)
-    print(result)
-    print(average_best_difference)
     save_path = "experiment_result/" + data_set + "/RIS.png"  # path to save figures
     csv_path = "experiment_result/" + data_set + "/RIS.csv"  # path to save csv file
     plot_RIS(result, wrong_bit_list_all, H_list, average_best_difference, save_path, "error $\eta$", "average price difference", "RIS")
