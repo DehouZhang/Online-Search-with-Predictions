@@ -1,7 +1,7 @@
 # Online Search with Best-Price and Query-Based Predictions
-This is the implementation about our Best-Price prediction and Query-Based prediction algorithms for the Online Search problem.
+This is the implementation about our Best-Price prediction and Query-Based prediction algorithms for the Online Search problem. And Also the Query-Based prediction algorithms for the Interval Search problem
 
-We implement `ORA`, `Robust` and `RLIS` algorithms. 
+We implement `ORA`, `Robust`, `RLIS` and 'RIS' algorithms. 
 
 ## Experiment Data
 The experiment data can be download from https://eatradingacademy.com/software/forex-historical-data/.
