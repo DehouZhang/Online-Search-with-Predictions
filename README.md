@@ -8,6 +8,8 @@ The experiment data can be download from https://eatradingacademy.com/software/f
 
 We included `ETHUSD`, `BTCUSD`, `CADJPY`, `EURUSD`, `GBPUSD` and `AUDCHF` as experment data in `Data` folder.
 
+[Time open high low close volumn] 
+
 ## Prerequisites
 * Python 3.8 
 * Numpy >= 1.19.2 
