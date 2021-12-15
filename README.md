@@ -1,7 +1,7 @@
 # Online Algorithm with Predictions for Trading Problems
 This is the implementation about our Best-Price prediction and Query-Based prediction algorithms for the Online Search problem. And Also the Query-Based prediction algorithms for the Interval Search problem
 
-We implement `ORA`, `Robust`, `RLIS` and `LIS` algorithms. 
+We implement `ORA`, `ROBUST-MIX`, `RLIS` and `LIS` algorithms. 
 
 ## Experiment Data
 The experiment data can be download from https://eatradingacademy.com/software/forex-historical-data/.
